@@ -49,6 +49,7 @@ Don't commit real Chrome profile data / avatars — docs screenshots come from
   bar or any other UI looks like, the PR description must show it (before/after when something
   existing changed). Render it with `scripts/screenshots.sh` (README images, commit the updated
   `docs/*.png`) or `scripts/debug.sh shot <file.png>` for other states, always from the demo
-  config (`scripts/demo-config.json`) so no real accounts or avatars get published. Embed images
-  pushed to the branch with
-  `![…](https://github.com/macrosak/link-router/blob/<branch>/<path>?raw=true)`.
+  config (`scripts/demo-config.json`) so no real accounts or avatars get published. Put them in
+  the description with `gh pr create/edit --attach './shot.png#alt text'` (gh ≥ 2.101): write
+  `![alt](./shot.png)` in the body and gh uploads the file and rewrites the reference. Don't
+  commit PR-only screenshots or push them to a side branch.
