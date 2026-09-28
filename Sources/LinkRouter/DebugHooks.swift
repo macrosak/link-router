@@ -8,6 +8,8 @@ import LinkRouterCore
 ///   key:<name>     up | down | return | opt-return | esc | tab | cmd-<1-9>
 ///   state          write the picker state as JSON to $TMPDIR/linkrouter-debug.json
 ///   settings:<tab> open Settings on general | browsers | rules
+///   snapshot:<path> render the picker (or Settings) window to a PNG — works
+///                  without Screen Recording permission
 @MainActor
 final class DebugHooks {
     private weak var app: AppDelegate?
@@ -32,6 +34,7 @@ final class DebugHooks {
         case "key": key(arg)
         case "state": writeState()
         case "settings": app.settings.show(tab: SettingsTab(rawValue: arg) ?? .general)
+        case "snapshot": snapshot(to: arg)
         default: Log.error("debug: unknown command \(cmd)")
         }
     }
@@ -48,6 +51,15 @@ final class DebugHooks {
                                            isARepeat: false, keyCode: code)
         else { Log.error("debug: unknown key \(name)"); return }
         _ = app?.picker.handleKeyDown(event)
+    }
+
+    private func snapshot(to path: String) {
+        let window = NSApp.windows.first { $0 is PickerPanel && $0.isVisible }
+            ?? NSApp.windows.first { $0.isVisible && $0.title == "Link Router Settings" }
+        guard let view = window?.contentView,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
     }
 
     private func writeState() {
