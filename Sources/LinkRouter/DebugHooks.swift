@@ -5,7 +5,7 @@ import LinkRouterCore
 /// (see scripts/debug.sh). Commands arrive as distributed notifications
 /// named `io.github.macrosak.linkrouter.debug` with the command in `object`:
 ///   query:<text>   set the picker's filter
-///   key:<name>     up | down | return | opt-return | esc | tab | cmd-r | cmd-<1-3>
+///   key:<name>     up | down | return | esc | tab | cmd-<1-3>
 ///   state          write the picker state as JSON to $TMPDIR/linkrouter-debug.json
 ///   settings:<tab> open Settings on general | browsers | rules
 ///   demo-link:<url> show the picker for <url> with a synthetic IntelliJ source
@@ -47,11 +47,11 @@ final class DebugHooks {
 
     private func key(_ name: String) {
         let codes: [String: (UInt16, NSEvent.ModifierFlags)] = [
-            "up": (0x7E, []), "down": (0x7D, []), "return": (0x24, []), "opt-return": (0x24, .option),
+            "up": (0x7E, []), "down": (0x7D, []), "return": (0x24, []),
             "esc": (0x35, []), "tab": (0x30, []),
-            "cmd-r": (0x0F, .command), "cmd-1": (0x12, .command), "cmd-2": (0x13, .command), "cmd-3": (0x14, .command),
+            "cmd-1": (0x12, .command), "cmd-2": (0x13, .command), "cmd-3": (0x14, .command),
         ]
-        let chars = name == "cmd-r" ? "r" : ""
+        let chars = ""
         guard let (code, flags) = codes[name],
               let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0,
                                            windowNumber: 0, context: nil, characters: chars, charactersIgnoringModifiers: chars,
@@ -79,6 +79,8 @@ final class DebugHooks {
             state["query"] = vm.query
             state["filtered"] = vm.filtered.map(\.id)
             state["selectedIndex"] = vm.selectedIndex
+            state["mode"] = vm.mode == .browsers ? "browsers" : "actions"
+            state["actions"] = vm.filteredActions.map(\.title)
             state["urls"] = vm.urls.map(\.absoluteString)
             state["source"] = [vm.context.sourceBundleID ?? "", vm.context.windowTitle ?? ""]
         }

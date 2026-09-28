@@ -12,7 +12,7 @@ final class ConfigStore: ObservableObject {
     /// recent link" in Settings. In memory only.
     @Published private(set) var recentLinks: [RecentLink] = []
 
-    /// A rule being captured from the picker (⌘R), shown in Settings → Rules.
+    /// A rule being recorded from the picker (⇥ → Record new rule…), shown in Settings → Rules.
     @Published var ruleDraft: RuleDraft?
 
     private let url: URL

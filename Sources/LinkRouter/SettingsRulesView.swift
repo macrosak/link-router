@@ -10,7 +10,7 @@ struct SettingsRulesView: View {
     @State private var editing: EditRequest?
 
     /// What the editor sheet is showing: a rule, plus the picker draft it came
-    /// from when capturing (⌘R).
+    /// from when recording (⇥ → Record new rule…).
     struct EditRequest: Identifiable {
         let rule: Rule
         var draft: RuleDraft?
@@ -29,7 +29,7 @@ struct SettingsRulesView: View {
                 }
                 SettingsCard(theme: theme) {
                     if store.config.rules.isEmpty {
-                        SettingsRow(label: "No rules yet", desc: "Every link shows the picker. Add a rule, press ⌥↵ in the picker, or create one from a recent link below.", last: true, theme: theme) { EmptyView() }
+                        SettingsRow(label: "No rules yet", desc: "Every link shows the picker. Add a rule, use ⇥ → Record new rule… in the picker, or create one from a recent link below.", last: true, theme: theme) { EmptyView() }
                     }
                     ForEach(Array(store.config.rules.enumerated()), id: \.element.id) { idx, rule in
                         ruleRow(rule, idx: idx, last: idx == store.config.rules.count - 1)

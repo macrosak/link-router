@@ -27,6 +27,7 @@ final class PickerController {
         context: LinkContext,
         targets: [BrowserTarget],
         onCreateRule: @escaping (BrowserTarget?, [URL]) -> Void = { _, _ in },
+        onOpenSettings: @escaping () -> Void = {},
         onChoose: @escaping (BrowserTarget, Bool, [URL]) -> Void
     ) {
         let start = DispatchTime.now()
@@ -42,10 +43,24 @@ final class PickerController {
             onChoose(target, remember, pending)
         }
         vm.onCancel = { [weak self] in self?.teardown(restoreFocus: true) }
-        vm.onCreateRule = { [weak self, weak vm] in
-            let selected = vm?.selected
-            self?.teardown(restoreFocus: false)
-            onCreateRule(selected, pending)
+        vm.onAction = { [weak self] action, target in
+            guard let self else { return }
+            switch action {
+            case .recordRule:
+                self.teardown(restoreFocus: false)
+                onCreateRule(target, pending)
+            case .alwaysUse:
+                guard let target else { return }
+                self.teardown(restoreFocus: false)
+                onChoose(target, true, pending)
+            case .copyLink:
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(pending.map(\.absoluteString).joined(separator: "\n"), forType: .string)
+                self.teardown(restoreFocus: true)
+            case .openSettings:
+                self.teardown(restoreFocus: false)
+                onOpenSettings()
+            }
         }
         viewModel = vm
 
@@ -106,26 +121,15 @@ final class PickerController {
         guard let vm = viewModel else { return event }
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if flags.contains(.command), let digit = Self.digitKeyCodes[event.keyCode] {
-            vm.choose(at: digit - 1, remember: flags.contains(.option))
-            return nil
-        }
-        if flags.contains(.command), event.charactersIgnoringModifiers == "r" {
-            vm.onCreateRule()
-            return nil
-        }
-        if flags.contains(.command), event.charactersIgnoringModifiers == "c",
-           panel?.firstResponder.map({ ($0 as? NSTextView)?.selectedRange().length ?? 0 }) == 0 {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(vm.urls.map(\.absoluteString).joined(separator: "\n"), forType: .string)
-            vm.onCancel()
+            vm.mode == .browsers ? vm.choose(at: digit - 1) : vm.runAction(at: digit - 1)
             return nil
         }
         switch event.keyCode {
         case 0x7E: vm.moveUp(); return nil                                     // ↑
         case 0x7D: vm.moveDown(); return nil                                   // ↓
-        case 0x24, 0x4C: vm.confirm(remember: flags.contains(.option)); return nil  // ↵
+        case 0x24, 0x4C: vm.confirm(); return nil                              // ↵
         case 0x35: vm.cancel(); return nil                                     // esc
-        case 0x30: flags.contains(.shift) ? vm.moveUp() : vm.moveDown(); return nil  // ⇥
+        case 0x30: vm.toggleActions(); return nil                              // ⇥ actions ⇄ browsers
         default: return event
         }
     }
