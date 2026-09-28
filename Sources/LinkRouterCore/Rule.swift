@@ -136,3 +136,41 @@ public enum RuleMatcher {
 extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
 }
+
+extension Rule {
+    /// The rule ⌥↵ ("always use this") saves: scoped to the source app and,
+    /// when known, the stable part of its window title (the project name in
+    /// IDE titles like "link-router – Rule.swift"). Without a source app it
+    /// falls back to the link's host.
+    public static func suggested(from ctx: LinkContext, targetID: String) -> Rule {
+        guard let app = ctx.sourceBundleID, !app.isEmpty else {
+            return Rule(urlPattern: ctx.url.host ?? ctx.url.absoluteString, targetID: targetID)
+        }
+        return Rule(
+            sourceBundleID: app,
+            sourceAppName: ctx.sourceAppName ?? app,
+            windowTitleContains: ctx.windowTitle.map(stableTitlePart) ?? "",
+            targetID: targetID
+        )
+    }
+
+    /// First segment of a window title split on the usual separators
+    /// (" – ", " — ", " - ", " | ").
+    public static func stableTitlePart(_ title: String) -> String {
+        var head = title
+        for sep in [" – ", " — ", " - ", " | "] {
+            if let r = head.range(of: sep) { head = String(head[..<r.lowerBound]) }
+        }
+        let t = head.trimmed
+        return t.isEmpty ? title.trimmed : t
+    }
+
+    /// One-line human summary of the conditions.
+    public var summary: String {
+        var parts: [String] = []
+        if !urlPattern.trimmed.isEmpty { parts.append("URL \(urlMatch.label) “\(urlPattern.trimmed)”") }
+        if !sourceBundleID.trimmed.isEmpty { parts.append("from \(sourceAppName.trimmed.isEmpty ? sourceBundleID : sourceAppName)") }
+        if !windowTitleContains.trimmed.isEmpty { parts.append("window “\(windowTitleContains.trimmed)”") }
+        return parts.isEmpty ? "No conditions (never matches)" : parts.joined(separator: " · ")
+    }
+}

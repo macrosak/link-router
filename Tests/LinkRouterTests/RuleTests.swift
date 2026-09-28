@@ -74,3 +74,28 @@ struct RuleTests {
         #expect(RuleMatcher.match(rules, context: ctx(URL(string: "https://x.org")!), targets: [a, b, c]) == nil)
     }
 }
+
+@Suite("Suggested rules")
+struct SuggestedRuleTests {
+    let url = URL(string: "https://github.com/a/b")!
+
+    @Test func stableTitlePart() {
+        #expect(Rule.stableTitlePart("link-router – Rule.swift") == "link-router")
+        #expect(Rule.stableTitlePart("recallyx [~/p/recallyx] – main.swift") == "recallyx [~/p/recallyx]")
+        #expect(Rule.stableTitlePart("Just a title") == "Just a title")
+    }
+
+    @Test func fromAppAndWindow() {
+        let r = Rule.suggested(from: LinkContext(url: url, sourceBundleID: "com.jetbrains.intellij", sourceAppName: "IntelliJ IDEA", windowTitle: "link-router – Rule.swift"), targetID: "t")
+        #expect(r.sourceBundleID == "com.jetbrains.intellij")
+        #expect(r.windowTitleContains == "link-router")
+        #expect(r.urlPattern.isEmpty)
+        #expect(r.summary == "from IntelliJ IDEA · window “link-router”")
+    }
+
+    @Test func withoutSourceUsesHost() {
+        let r = Rule.suggested(from: LinkContext(url: url), targetID: "t")
+        #expect(r.urlPattern == "github.com")
+        #expect(r.matches(LinkContext(url: url)))
+    }
+}
