@@ -3,6 +3,7 @@ import LinkRouterCore
 
 struct SettingsGeneralView: View {
     @ObservedObject var store: ConfigStore
+    let shortcutActions: ShortcutActions
     let theme: SettingsTheme
 
     @State private var isDefault = DefaultBrowser.isDefault
@@ -10,6 +11,7 @@ struct SettingsGeneralView: View {
     @State private var axGranted = SourceContext.accessibilityGranted
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var launchError: String?
+    @State private var shortcutError: String?
 
     /// Permission / default-browser state can change behind our back (System
     /// Settings, the macOS confirmation dialog) — poll while visible.
@@ -37,11 +39,25 @@ struct SettingsGeneralView: View {
             }
 
             VStack(spacing: 0) {
+                SectionLabel(text: "Shortcut", theme: theme)
+                SettingsCard(theme: theme) {
+                    SettingsRow(
+                        label: "Switch to a browser",
+                        desc: shortcutError ?? "Opens the picker without a link: pick a browser or profile to bring its window to the front. Click to record a new shortcut.",
+                        last: true, theme: theme
+                    ) {
+                        ShortcutRecorder(shortcut: store.config.switchShortcut, actions: shortcutActions,
+                                         error: $shortcutError, theme: theme)
+                    }
+                }
+            }
+
+            VStack(spacing: 0) {
                 SectionLabel(text: "Permissions", theme: theme)
                 SettingsCard(theme: theme) {
                     SettingsRow(
                         label: "Accessibility",
-                        desc: "Needed only for rules on the source window title (e.g. one IntelliJ project per browser). After granting, quit and relaunch Link Router.",
+                        desc: "Needed for rules on the source window title (e.g. one IntelliJ project per browser) and to switch to a Chrome profile's window. After granting, quit and relaunch Link Router.",
                         last: true, theme: theme
                     ) {
                         if axGranted {

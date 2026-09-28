@@ -12,29 +12,43 @@ struct PickerView: View {
     private var theme: RXTheme { RXTheme.current(colorScheme) }
 
     static let rowHeight: CGFloat = 48
-    static let chromeHeight: CGFloat = 54 + 36 + 38 + 12
+    static let linkBarHeight: CGFloat = 36
+    static let chromeHeight: CGFloat = 54 + linkBarHeight + 38 + 12
 
     var body: some View {
         VStack(spacing: 0) {
             searchBar
-            linkBar
+            if !viewModel.isSwitching { linkBar }
             switch viewModel.mode {
             case .browsers:
                 if viewModel.filtered.isEmpty { noMatches("No browsers match").frame(height: listHeight) } else { list.frame(height: listHeight) }
             case .actions:
                 if viewModel.filteredActions.isEmpty { noMatches("No actions match").frame(height: listHeight) } else { actionList.frame(height: listHeight) }
             }
-            HintBar(items: hints, theme: theme, left: viewModel.sourceDescription.map { "from \($0)" })
+            HintBar(items: hints, theme: theme, left: footerNote)
         }
         .frame(width: PickerController.width)
         .background(theme.panelTint)
         .onAppear { searchFocused = true }
     }
 
+    private var footerNote: String? {
+        guard viewModel.isSwitching else { return viewModel.sourceDescription.map { "from \($0)" } }
+        // Without Accessibility a profile can only be brought forward with
+        // its whole browser — say so while it matters.
+        if !SourceContext.accessibilityGranted, viewModel.filtered.contains(where: { $0.profileDirectory != nil }) {
+            return "Grant Accessibility in Settings to jump to a profile's window"
+        }
+        return "Brings the window forward, no new tab"
+    }
+
     private var hints: [HintItem] {
         switch viewModel.mode {
         case .browsers:
             guard !viewModel.filtered.isEmpty else { return [HintItem(keys: ["esc"], label: "Close")] }
+            if viewModel.isSwitching {
+                return [HintItem(keys: ["↵"], label: "Switch"), HintItem(keys: ["esc"], label: "Close")]
+            }
             return [
                 HintItem(keys: ["↵"], label: "Open"),
                 HintItem(keys: ["⇥"], label: "Actions"),
@@ -49,12 +63,17 @@ struct PickerView: View {
         }
     }
 
+    private var placeholder: String {
+        if viewModel.mode == .actions { return "Actions…" }
+        return viewModel.isSwitching ? "Switch to…" : "Open in…"
+    }
+
     private var searchBar: some View {
         HStack(spacing: 11) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(theme.textDim)
-            TextField(viewModel.mode == .browsers ? "Open in…" : "Actions…", text: $viewModel.query)
+            TextField(placeholder, text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 19))
                 .foregroundStyle(theme.text)
@@ -91,7 +110,7 @@ struct PickerView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 18)
-        .frame(height: 36)
+        .frame(height: Self.linkBarHeight)
         .background(theme.rail)
         .overlay(alignment: .bottom) { Rectangle().fill(theme.hairline).frame(height: 0.5) }
         .help(full)

@@ -31,6 +31,12 @@ repo layout, scripts, and release workflow.
 - Only apps handling both `https` and `public.html` are detected; other link pickers are
   deny-listed (`BrowserCatalog.excludedBundleIDs`).
 - Rule without conditions never matches. ⌥ held at click time forces the picker.
+- **Switching** (global hotkey, default ⌃⇧B, Carbon `RegisterEventHotKey` + click-to-record
+  recorder ported from Recallyx — suspend the hotkey while recording): the picker without links.
+  A Chromium profile is raised by pressing its item in the browser's **Profiles menu** via AX
+  (`BrowserSwitcher`) — `--profile-directory` without a URL always opens a new window, and the AX
+  window list only covers the current Space. Activate only after the profile's window is focused
+  (its AX title ends with ` - <menu title>`), otherwise macOS switches to an older window's Space.
 
 ## Commands
 

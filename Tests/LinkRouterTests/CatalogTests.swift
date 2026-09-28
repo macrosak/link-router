@@ -19,6 +19,30 @@ struct CatalogTests {
         #expect(p[2].name == "Profile 9")  // empty name falls back to the dir
     }
 
+    @Test func readsTheAccountFirstName() throws {
+        let data = Data(#"{"profile":{"info_cache":{"Profile 2":{"name":"Work","gaia_given_name":"Jane","is_using_default_name":false}}}}"#.utf8)
+        let p = try #require(ChromiumProfiles.parse(localState: data)?.first)
+        #expect(p.givenName == "Jane" && !p.usesDefaultName)
+    }
+
+    /// Chrome's Profiles menu: "Jane (Work)" for a named profile of a signed-in
+    /// account, "Jane" when the names agree or the name is a placeholder.
+    @Test func menuTitlesFollowChrome() {
+        let work = ChromiumProfile(directory: "Profile 2", name: "Work", email: nil, givenName: "Jane")
+        #expect(work.menuTitles.first == "Jane (Work)")
+        #expect(work.matchesMenuTitle("Jane (Work)") && work.matchesMenuTitle("Work"))
+        #expect(!work.matchesMenuTitle("Jane") && !work.matchesMenuTitle("Workshop"))
+
+        let same = ChromiumProfile(directory: "Default", name: "Jane", email: nil, givenName: "Jane")
+        #expect(same.menuTitles == ["Jane"])
+
+        let placeholder = ChromiumProfile(directory: "Profile 3", name: "Person 2", email: nil, givenName: "Jane", usesDefaultName: true)
+        #expect(placeholder.menuTitles.first == "Jane")
+
+        let local = ChromiumProfile(directory: "Profile 9", name: "zvoove", email: nil)
+        #expect(local.menuTitles == ["zvoove"])
+    }
+
     @Test func garbageLocalStateIsNil() {
         #expect(ChromiumProfiles.parse(localState: Data("nope".utf8)) == nil)
     }

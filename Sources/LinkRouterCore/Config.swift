@@ -7,12 +7,22 @@ public struct Config: Codable, Equatable, Sendable {
     public var showMenuBarIcon: Bool
     /// Don't offer to become the default browser on launch.
     public var skipDefaultBrowserPrompt: Bool
+    /// Global hotkey that opens the picker without a link, to switch to a
+    /// browser / profile window.
+    public var switchShortcut: Shortcut
 
-    public init(browsers: [BrowserTarget] = [], rules: [Rule] = [], showMenuBarIcon: Bool = true, skipDefaultBrowserPrompt: Bool = false) {
+    public init(
+        browsers: [BrowserTarget] = [],
+        rules: [Rule] = [],
+        showMenuBarIcon: Bool = true,
+        skipDefaultBrowserPrompt: Bool = false,
+        switchShortcut: Shortcut = .switchBrowserDefault
+    ) {
         self.browsers = browsers
         self.rules = rules
         self.showMenuBarIcon = showMenuBarIcon
         self.skipDefaultBrowserPrompt = skipDefaultBrowserPrompt
+        self.switchShortcut = switchShortcut
     }
 
     // Tolerant decoding: fields added later default instead of failing the load.
@@ -22,6 +32,7 @@ public struct Config: Codable, Equatable, Sendable {
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []
         showMenuBarIcon = try c.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
         skipDefaultBrowserPrompt = try c.decodeIfPresent(Bool.self, forKey: .skipDefaultBrowserPrompt) ?? false
+        switchShortcut = try c.decodeIfPresent(Shortcut.self, forKey: .switchShortcut) ?? .switchBrowserDefault
     }
 
     public var enabledBrowsers: [BrowserTarget] { browsers.filter(\.enabled) }

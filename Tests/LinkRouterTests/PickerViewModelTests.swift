@@ -29,6 +29,19 @@ struct PickerViewModelTests {
         #expect(vm.filteredActions[1].subtitle == "Saves a rule for links from IntelliJ IDEA · link-router")
     }
 
+    @Test func withoutALinkItOnlySwitches() {
+        let vm = PickerViewModel(urls: [], context: nil, targets: targets)
+        #expect(vm.isSwitching)
+        vm.toggleActions()
+        #expect(vm.mode == .browsers)  // no action menu while switching
+        var chosen: BrowserTarget?
+        vm.onChoose = { t, _ in chosen = t }
+        vm.query = "work"
+        vm.confirm()
+        #expect(chosen?.profileDirectory == "Profile 1")
+        #expect(vm.sourceDescription == nil)
+    }
+
     @Test func leavingActionsRestoresBrowserFilterAndSelection() {
         let vm = make()
         vm.moveDown(); vm.moveDown()

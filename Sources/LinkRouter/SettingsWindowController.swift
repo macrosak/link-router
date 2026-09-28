@@ -7,10 +7,12 @@ import SwiftUI
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let store: ConfigStore
+    private let shortcutActions: ShortcutActions
     private var window: NSWindow?
 
-    init(store: ConfigStore) {
+    init(store: ConfigStore, shortcutActions: ShortcutActions) {
         self.store = store
+        self.shortcutActions = shortcutActions
         super.init()
     }
 
@@ -21,7 +23,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             window.makeKeyAndOrderFront(nil)
             return
         }
-        let hosting = NSHostingController(rootView: SettingsView(store: store, initialTab: tab))
+        let hosting = NSHostingController(rootView: SettingsView(store: store, shortcutActions: shortcutActions, initialTab: tab))
         let window = NSWindow(contentViewController: hosting)
         window.title = "Link Router Settings"
         window.styleMask = [.titled, .closable, .fullSizeContentView]

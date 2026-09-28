@@ -29,6 +29,9 @@ entry — so "work links in the work profile" is one keystroke or one rule.
   **~5 ms**: Link Router writes straight into the browser's own `SingletonSocket` instead of
   spawning a second browser process (which is what `open -na … --args --profile-directory` does,
   and why other pickers take a second or two).
+- **Switch to a browser** with a global shortcut (`⌃⇧B`): the same picker without a link brings
+  the chosen browser or Chrome profile's window to the front — on whatever screen or Space it
+  is — without opening a tab.
 - **Keyboard-first**, same look and feel as [Recallyx](https://github.com/macrosak/recallyx).
 - Native Swift, no dependencies, MIT.
 
@@ -87,6 +90,26 @@ They're filterable like the browser list:
 
 Hold **`⌥` while clicking a link** anywhere to skip the rules and get the picker.
 
+## Switching browsers
+
+Lost a browser window behind others, or on another screen or Space? Press **`⌃⇧B`** anywhere
+(or **Switch to Browser…** in the menu-bar menu): the picker opens without a link. Pick a
+browser or profile and its window comes to the front — no new tab. A Chrome profile with no
+open window gets a new one; a browser that isn't running is launched. Press the shortcut again
+to close the picker.
+
+Change or disable the shortcut in **Settings → General → Shortcut** — click the keys, press the
+new combination (it needs `⌘`, `⌃` or `⌥`), `esc` cancels, `✕` disables.
+
+Jumping to a *profile's* window needs **Accessibility** (see [Permissions](#permissions)):
+Link Router picks the profile in Chrome's own **Profiles** menu, which raises that profile's
+last used window. Without it, the browser comes forward as a whole.
+
+<p align="center">
+  <img src="docs/switch.png" alt="Link Router switching picker" width="600"><br>
+  <em>⌃⇧B → type → ↵.</em>
+</p>
+
 ## Browsers
 
 **Settings → Browsers** lists every detected browser and profile in picker order:
@@ -132,8 +155,8 @@ Three ways to create one without typing patterns by hand:
 
 ## Permissions
 
-Everything except window-title rules works with no permission. **Window-title rules need
-Accessibility**: **Settings → General → Accessibility → Grant…** → toggle **Link Router** on
+Everything except window-title rules and switching to a profile's window works with no
+permission. **Those two need Accessibility**: **Settings → General → Accessibility → Grant…** → toggle **Link Router** on
 under **Privacy & Security → Accessibility** → **quit and relaunch** Link Router (macOS reads
 the grant at process start).
 

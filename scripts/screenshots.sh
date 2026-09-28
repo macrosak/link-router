@@ -19,6 +19,9 @@ sleep 2
 ./scripts/debug.sh shot "$PWD/docs/actions.png"
 ./scripts/debug.sh key esc
 ./scripts/debug.sh key esc
+./scripts/debug.sh switch; sleep 0.8
+./scripts/debug.sh shot "$PWD/docs/switch.png"
+./scripts/debug.sh key esc
 ./scripts/debug.sh settings browsers; sleep 1
 ./scripts/debug.sh shot "$PWD/docs/browsers.png"
 ./scripts/debug.sh settings rules; sleep 1

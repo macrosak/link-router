@@ -31,13 +31,19 @@ struct PickerActionItem: Identifiable, Equatable {
 /// State of one picker session: the pending link(s), the type-to-filter query,
 /// the highlighted row, and which list is showing — browsers, or the ⇥ action
 /// menu for the browser highlighted when ⇥ was pressed.
+///
+/// Without links (the switch-browser hotkey) the picker only switches: no
+/// link bar, no action menu, ↵ brings the chosen browser / profile forward.
 @MainActor
 final class PickerViewModel: ObservableObject {
     enum Mode { case browsers, actions }
 
     let urls: [URL]
-    let context: LinkContext
+    /// Where the link came from; nil when switching.
+    let context: LinkContext?
     private let targets: [BrowserTarget]
+
+    var isSwitching: Bool { urls.isEmpty }
 
     @Published private(set) var mode: Mode = .browsers
     @Published var query = "" {
@@ -59,7 +65,7 @@ final class PickerViewModel: ObservableObject {
     /// (action, the browser highlighted when the menu opened)
     var onAction: (PickerAction, BrowserTarget?) -> Void = { _, _ in }
 
-    init(urls: [URL], context: LinkContext, targets: [BrowserTarget]) {
+    init(urls: [URL], context: LinkContext?, targets: [BrowserTarget]) {
         self.urls = urls
         self.context = context
         self.targets = targets
@@ -103,7 +109,7 @@ final class PickerViewModel: ObservableObject {
     }
 
     func showActions() {
-        guard mode == .browsers else { return }
+        guard mode == .browsers, !isSwitching else { return }
         actionTarget = selected ?? filtered.first ?? targets.first
         savedBrowserState = (query, selectedIndex)
         mode = .actions
@@ -134,7 +140,7 @@ final class PickerViewModel: ObservableObject {
         ]
         if let t = actionTarget {
             items.append(PickerActionItem(action: .alwaysUse, title: "Always open in \(t.title)",
-                                          subtitle: source.map { "Saves a rule for links from \($0)" } ?? "Saves a rule for \(context.url.host ?? "this site")"))
+                                          subtitle: source.map { "Saves a rule for links from \($0)" } ?? "Saves a rule for \(context?.url.host ?? "this site")"))
         }
         items += [
             PickerActionItem(action: .copyLink, title: "Copy link to clipboard",
@@ -161,14 +167,14 @@ final class PickerViewModel: ObservableObject {
 
     /// "IntelliJ IDEA · link-router – Rule.swift"
     var sourceDescription: String? {
-        let parts = [context.sourceAppName, context.windowTitle].compactMap { $0 }.filter { !$0.isEmpty }
+        let parts = [context?.sourceAppName, context?.windowTitle].compactMap { $0 }.filter { !$0.isEmpty }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     /// "IntelliJ IDEA · link-router" — the part an "always" rule keys on.
     private var sourceShortDescription: String? {
-        guard let app = context.sourceAppName, !app.isEmpty else { return nil }
-        guard let title = context.windowTitle, !title.isEmpty else { return app }
+        guard let app = context?.sourceAppName, !app.isEmpty else { return nil }
+        guard let title = context?.windowTitle, !title.isEmpty else { return app }
         return "\(app) · \(Rule.stableTitlePart(title))"
     }
 }
