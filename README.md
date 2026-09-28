@@ -11,7 +11,7 @@
     <img alt="Release" src="https://img.shields.io/github/v/release/macrosak/link-router">
   </p>
 
-  <p><a href="https://github.com/macrosak/link-router/releases/latest"><b>Download</b></a></p>
+  <p><a href="https://github.com/macrosak/link-router/releases/latest"><b>Download</b></a> · <a href="https://macrosak.github.io/link-router/">Website</a></p>
 </div>
 
 ## What it is
