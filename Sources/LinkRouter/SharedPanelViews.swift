@@ -39,8 +39,11 @@ struct HintBar: View {
                     .foregroundStyle(theme.textFaint)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(-1)
+            } else {
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
             ForEach(items) { item in
                 HStack(spacing: 6) {
                     ForEach(Array(item.keys.enumerated()), id: \.offset) { _, k in
@@ -50,6 +53,7 @@ struct HintBar: View {
                         .font(.system(size: 12.5))
                         .foregroundStyle(theme.textDim)
                 }
+                .fixedSize()
             }
         }
         .padding(.horizontal, 16)
