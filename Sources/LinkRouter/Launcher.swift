@@ -57,11 +57,20 @@ enum Launcher {
     /// so we hand it over explicitly.
     private static func activate(_ bundleID: String) {
         guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
+        let ok: Bool
         if #available(macOS 14.0, *) {
             NSApp.yieldActivation(to: app)
-            app.activate()
+            ok = app.activate()
         } else {
-            app.activate(options: [])
+            ok = app.activate(options: [])
         }
+        if !ok, let url = app.bundleURL {
+            // Activation refused: LaunchServices can always bring an app
+            // forward (same as `open -a`).
+            let cfg = NSWorkspace.OpenConfiguration()
+            cfg.activates = true
+            NSWorkspace.shared.openApplication(at: url, configuration: cfg)
+        }
+        Log.info("activate \(bundleID) ok=\(ok)")
     }
 }
