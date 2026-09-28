@@ -13,7 +13,17 @@ enum Launcher {
         let start = DispatchTime.now()
         let appURL = URL(fileURLWithPath: target.appPath)
 
-        guard let profile = target.profileDirectory,
+        // A profile directory that no longer exists (profile deleted since
+        // detection) would make Chromium silently create a new, empty profile —
+        // open in the browser's last-used profile instead.
+        var profileDirectory = target.profileDirectory
+        if let p = profileDirectory, let dir = ChromiumProfiles.userDataDir(for: target.bundleID),
+           !FileManager.default.fileExists(atPath: dir.appendingPathComponent(p).path) {
+            Log.error("profile \(p) of \(target.bundleID) is gone — opening without a profile")
+            profileDirectory = nil
+        }
+
+        guard let profile = profileDirectory,
               let dataDir = ChromiumProfiles.userDataDir(for: target.bundleID)
         else {
             let cfg = NSWorkspace.OpenConfiguration()
