@@ -3,6 +3,10 @@ name: Release
 on:
   push:
     branches: [main]
+    paths-ignore:           # the product page deploys on its own (pages.yml)
+      - "site/**"
+      - "scripts/site.sh"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:        # manual run from any branch (native ref picker)
 
 concurrency:
