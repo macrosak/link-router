@@ -32,10 +32,13 @@ struct CatalogTests {
             id == "com.google.Chrome" ? ChromiumProfiles.parse(localState: localState) : nil
         }
         #expect(targets.map(\.id) == [
-            "com.google.Chrome#Profile 2", "com.google.Chrome#Default", "com.google.Chrome#Profile 9", "com.apple.Safari",
+            "com.google.Chrome#Profile 2", "com.google.Chrome#Default", "com.google.Chrome#Profile 9",
+            "com.google.Chrome#incognito", "com.apple.Safari",
         ])
         #expect(targets[1].subtitle == "Google Chrome · me@example.com")
-        #expect(targets[3].title == "Safari")
+        #expect(targets[3].incognito && targets[3].title == "Incognito" && targets[3].subtitle == "Google Chrome · private window")
+        #expect(targets[3].profileDirectory == nil)
+        #expect(targets[4].title == "Safari")
     }
 
     @Test func mergeKeepsOrderAndFlagsAppendsNewDropsGone() {
@@ -77,5 +80,20 @@ struct CustomNameTests {
         #expect(FuzzyMatcher.filter([t], query: "work").count == 1)
         t.customName = "  "
         #expect(t.title == "Work")
+    }
+}
+
+@Suite("Config compatibility")
+struct ConfigCompatibilityTests {
+    @Test func targetsWithoutNewFieldsStillDecode() throws {
+        let json = #"{"id":"s","bundleID":"s","appPath":"/S.app","appName":"Safari","enabled":false}"#
+        let t = try JSONDecoder().decode(BrowserTarget.self, from: Data(json.utf8))
+        #expect(!t.incognito && !t.enabled && t.customName == nil)
+    }
+
+    @Test func incognitoRoundTrips() throws {
+        let t = BrowserTarget.incognito(bundleID: "com.google.Chrome", appPath: "/C.app", appName: "Google Chrome")
+        let back = try JSONDecoder().decode(BrowserTarget.self, from: JSONEncoder().encode(t))
+        #expect(back == t && back.id == "com.google.Chrome#incognito")
     }
 }

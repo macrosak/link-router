@@ -7,8 +7,8 @@ repo layout, scripts, and release workflow.
 
 ## Layout
 
-- `Sources/LinkRouterCore` — pure logic, unit-tested: `BrowserTarget` (one browser or one
-  profile), `ChromiumProfiles` (reads `Local State`), `BrowserCatalog` (expand + merge detection
+- `Sources/LinkRouterCore` — pure logic, unit-tested: `BrowserTarget` (one browser, one
+  profile, or a Chromium Incognito entry), `ChromiumProfiles` (reads `Local State`), `BrowserCatalog` (expand + merge detection
   into saved order/flags/custom names), `Rule` / `RuleMatcher`, `FuzzyMatcher`, `Config` (JSON),
   `ChromiumSingleton` (the fast hand-off).
 - `Sources/LinkRouter` — AppKit/SwiftUI app: `AppDelegate` (GURL Apple-event handler → `route`),

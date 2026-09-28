@@ -34,7 +34,8 @@ public enum BrowserCatalog {
     }
 
     /// Expands installed browsers into picker targets: one per profile for a
-    /// Chromium browser with readable profiles, one plain entry otherwise.
+    /// Chromium browser with readable profiles (plus its Incognito window),
+    /// one plain entry otherwise.
     public static func targets(
         for browsers: [InstalledBrowser],
         profiles: (String) -> [ChromiumProfile]? = { ChromiumProfiles.profiles(for: $0) }
@@ -44,7 +45,7 @@ public enum BrowserCatalog {
                 return list.map {
                     BrowserTarget(bundleID: b.bundleID, appPath: b.appPath, appName: b.name,
                                   profileDirectory: $0.directory, profileName: $0.name, profileEmail: $0.email)
-                }
+                } + [BrowserTarget.incognito(bundleID: b.bundleID, appPath: b.appPath, appName: b.name)]
             }
             return [BrowserTarget(bundleID: b.bundleID, appPath: b.appPath, appName: b.name)]
         }

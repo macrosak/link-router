@@ -19,8 +19,8 @@
 Link Router sits in place of your default browser. When you click a link anywhere, it either
 **opens it straight away** in the browser a rule picks, or shows a small **picker** — type a
 few letters, hit `↵`, done. Every installed browser is listed, and Chromium-family browsers
-(Chrome, Brave, Edge, Vivaldi, Chromium) are listed **per profile**, so "work links in the work
-profile" is one keystroke or one rule.
+(Chrome, Brave, Edge, Vivaldi, Chromium) are listed **per profile** — plus an **Incognito**
+entry — so "work links in the work profile" is one keystroke or one rule.
 
 - **Rules** on the URL (prefix with `*` wildcards, contains, or regex), the **source app**, and the
   **source window title** — e.g. each IntelliJ project window opens links in a different Chrome
@@ -91,6 +91,7 @@ Hold **`⌥` while clicking a link** anywhere to skip the rules and get the pick
 
 **Settings → Browsers** lists every detected browser and profile in picker order:
 
+- Each Chromium browser also gets an **Incognito** entry (opens the link in a private window).
 - **Detect browsers** re-scans (new Chrome profiles are also picked up automatically after each
   link).
 - **Drag** rows (or use the arrows) to reorder.
