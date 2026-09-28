@@ -3,28 +3,62 @@ import ApplicationServices
 import LinkRouterCore
 
 /// Works out which app (and window) a link came from.
+@MainActor
 enum SourceContext {
-    /// `senderPID` is the Apple event's sender. Links opened through a helper
-    /// (the `open` CLI, LaunchServices agents) have a background sender, so we
-    /// fall back to the frontmost app — the one the user clicked in.
+    /// The last app other than us to be active. LaunchServices activates the
+    /// browser (us) before delivering the link, so by the time the event
+    /// arrives `frontmostApplication` is already Link Router.
+    private static var lastExternalApp: NSRunningApplication?
+    private static var observer: NSObjectProtocol?
+
+    static func startTracking() {
+        let own = Bundle.main.bundleIdentifier
+        let front = NSWorkspace.shared.frontmostApplication
+        if front?.bundleIdentifier != own { lastExternalApp = front }
+        observer = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { note in
+            guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  app.bundleIdentifier != own else { return }
+            MainActor.assumeIsolated { lastExternalApp = app }
+        }
+    }
+
+    /// Resolution order:
+    /// 1. the Apple event's sender, or the nearest regular app among its
+    ///    parent processes — links opened via the `open` CLI (IDEs, terminals,
+    ///    scripts) are sent by `open`, whose parent is the real app;
+    /// 2. the last app that was active before us.
     static func capture(url: URL, senderPID: pid_t?) -> LinkContext {
-        var app: NSRunningApplication?
-        if let pid = senderPID, pid > 0,
-           let sender = NSRunningApplication(processIdentifier: pid),
-           sender.activationPolicy == .regular,
-           sender.bundleIdentifier != Bundle.main.bundleIdentifier {
-            app = sender
-        }
-        if app == nil {
-            let front = NSWorkspace.shared.frontmostApplication
-            if front?.bundleIdentifier != Bundle.main.bundleIdentifier { app = front }
-        }
+        let app = senderPID.flatMap(regularAncestor) ?? lastExternalApp
         return LinkContext(
             url: url,
             sourceBundleID: app?.bundleIdentifier,
             sourceAppName: app?.localizedName,
             windowTitle: app.flatMap { focusedWindowTitle(pid: $0.processIdentifier) }
         )
+    }
+
+    private static func regularAncestor(of pid: pid_t) -> NSRunningApplication? {
+        var current = pid
+        for _ in 0..<12 where current > 1 {
+            if let app = NSRunningApplication(processIdentifier: current),
+               app.activationPolicy == .regular,
+               app.bundleIdentifier != Bundle.main.bundleIdentifier {
+                return app
+            }
+            guard let parent = parentPID(of: current), parent != current else { return nil }
+            current = parent
+        }
+        return nil
+    }
+
+    private static func parentPID(of pid: pid_t) -> pid_t? {
+        var info = kinfo_proc()
+        var size = MemoryLayout<kinfo_proc>.stride
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
+        guard sysctl(&mib, 4, &info, &size, nil, 0) == 0, size > 0 else { return nil }
+        return info.kp_eproc.e_ppid
     }
 
     /// Title of the app's focused (else main) window via Accessibility; nil

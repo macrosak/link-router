@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        SourceContext.startTracking()
         let firstRun = store.config.browsers.isEmpty
         store.refreshBrowsers()
         IconCache.shared.preload(store.config.enabledBrowsers)
