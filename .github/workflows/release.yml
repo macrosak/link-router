@@ -61,11 +61,39 @@ jobs:
         if: steps.version.outputs.skip != 'true'
         run: swift test
 
+      - name: Import signing identity
+        # A stable self-signed "Link Router Release" identity (private key in
+        # repo secrets, public cert in scripts/release-cert.pem). Unlike ad-hoc
+        # signing, it keeps the app's code-signing identity constant across
+        # releases, so macOS keeps the Accessibility grant after updates.
+        # Without the secret (forks), bundle.sh falls back to ad-hoc.
+        if: steps.version.outputs.skip != 'true' && env.P12 != ''
+        env:
+          P12: ${{ secrets.LINKROUTER_SIGNING_P12 }}
+          P12_PASSWORD: ${{ secrets.LINKROUTER_SIGNING_P12_PASSWORD }}
+        run: |
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASS="$(openssl rand -hex 16)"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/release.p12"
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          security import "$RUNNER_TEMP/release.p12" -k "$KC" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" >/dev/null
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain scripts/release-cert.pem
+          security find-identity -p codesigning -v
+          echo "LINKROUTER_SIGN_IDENTITY=Link Router Release" >> "$GITHUB_ENV"
+
       - name: Build & bundle
         if: steps.version.outputs.skip != 'true'
         env:
           LINKROUTER_VERSION: ${{ steps.version.outputs.version }}
         run: ./scripts/bundle.sh
+
+      - name: Verify signature
+        if: steps.version.outputs.skip != 'true'
+        run: codesign -dvv "Link Router.app" 2>&1 | grep -E "Authority|Identifier|TeamIdentifier" || true
 
       - name: Package DMG
         if: steps.version.outputs.skip != 'true'
