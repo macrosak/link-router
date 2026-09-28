@@ -1,0 +1,84 @@
+{
+ "browsers": [
+  {
+   "id": "com.google.Chrome#Default",
+   "bundleID": "com.google.Chrome",
+   "appPath": "/Applications/Google Chrome.app",
+   "appName": "Google Chrome",
+   "enabled": true,
+   "profileDirectory": "Demo 0",
+   "profileName": "Personal",
+   "profileEmail": "jane@gmail.com"
+  },
+  {
+   "id": "com.google.Chrome#Demo 1",
+   "bundleID": "com.google.Chrome",
+   "appPath": "/Applications/Google Chrome.app",
+   "appName": "Google Chrome",
+   "enabled": true,
+   "profileDirectory": "Demo 1",
+   "profileName": "Work",
+   "profileEmail": "jane@acme.io"
+  },
+  {
+   "id": "com.google.Chrome#Demo 2",
+   "bundleID": "com.google.Chrome",
+   "appPath": "/Applications/Google Chrome.app",
+   "appName": "Google Chrome",
+   "enabled": true,
+   "profileDirectory": "Demo 2",
+   "profileName": "Client \u2014 Globex",
+   "profileEmail": "jane@globex.com"
+  },
+  {
+   "id": "com.google.Chrome#Demo 3",
+   "bundleID": "com.google.Chrome",
+   "appPath": "/Applications/Google Chrome.app",
+   "appName": "Google Chrome",
+   "enabled": true,
+   "profileDirectory": "Demo 3",
+   "profileName": "Side project"
+  },
+  {
+   "id": "com.apple.Safari",
+   "bundleID": "com.apple.Safari",
+   "appPath": "/Applications/Safari.app",
+   "appName": "Safari",
+   "enabled": true
+  }
+ ],
+ "rules": [
+  {
+   "id": "6F9619FF-8B86-D011-B42D-00C04FC964FF",
+   "enabled": true,
+   "urlPattern": "github.com/acme",
+   "urlMatch": "prefix",
+   "sourceBundleID": "",
+   "sourceAppName": "",
+   "windowTitleContains": "",
+   "targetID": "com.google.Chrome#Demo 1"
+  },
+  {
+   "id": "7F9619FF-8B86-D011-B42D-00C04FC964FF",
+   "enabled": true,
+   "urlPattern": "",
+   "urlMatch": "prefix",
+   "sourceBundleID": "com.jetbrains.intellij",
+   "sourceAppName": "IntelliJ IDEA",
+   "windowTitleContains": "globex-portal",
+   "targetID": "com.google.Chrome#Demo 2"
+  },
+  {
+   "id": "8F9619FF-8B86-D011-B42D-00C04FC964FF",
+   "enabled": true,
+   "urlPattern": "*.atlassian.net",
+   "urlMatch": "prefix",
+   "sourceBundleID": "",
+   "sourceAppName": "",
+   "windowTitleContains": "",
+   "targetID": "com.google.Chrome#Demo 1"
+  }
+ ],
+ "showMenuBarIcon": true,
+ "skipDefaultBrowserPrompt": true
+}

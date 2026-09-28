@@ -21,6 +21,8 @@ final class ConfigStore: ObservableObject {
 
     /// Re-runs browser detection and merges it into the saved list.
     func refreshBrowsers() {
+        // Docs screenshots run on a hand-written demo config.
+        guard ProcessInfo.processInfo.environment["LINKROUTER_NO_DETECT"] != "1" else { return }
         let detected = BrowserCatalog.targets(for: BrowserDetector.installedBrowsers())
         config.browsers = BrowserCatalog.merge(saved: config.browsers, detected: detected)
     }

@@ -8,6 +8,7 @@ import LinkRouterCore
 ///   key:<name>     up | down | return | opt-return | esc | tab | cmd-<1-9>
 ///   state          write the picker state as JSON to $TMPDIR/linkrouter-debug.json
 ///   settings:<tab> open Settings on general | browsers | rules
+///   demo-link:<url> show the picker for <url> with a synthetic IntelliJ source
 ///   snapshot:<path> render the picker (or Settings) window to a PNG — works
 ///                  without Screen Recording permission
 @MainActor
@@ -35,6 +36,11 @@ final class DebugHooks {
         case "state": writeState()
         case "settings": app.settings.show(tab: SettingsTab(rawValue: arg) ?? .general)
         case "snapshot": snapshot(to: arg)
+        case "demo-link":
+            guard let url = URL(string: arg) else { return }
+            let ctx = LinkContext(url: url, sourceBundleID: "com.jetbrains.intellij", sourceAppName: "IntelliJ IDEA",
+                                  windowTitle: "link-router – Launcher.swift")
+            app.picker.show(urls: [url], context: ctx, targets: app.store.config.enabledBrowsers) { _, _, _ in }
         default: Log.error("debug: unknown command \(cmd)")
         }
     }

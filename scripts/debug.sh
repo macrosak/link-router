@@ -6,6 +6,7 @@ set -euo pipefail
 #   scripts/debug.sh launch            build, then run a debug instance with an
 #                                      isolated config ($TMPDIR/linkrouter-debug-config.json)
 #   scripts/debug.sh open <url>        send a link to it (as a browser would get it)
+#   scripts/debug.sh demo <url>        picker for <url> with a synthetic IntelliJ source
 #   scripts/debug.sh query <text>      set the picker filter
 #   scripts/debug.sh key <name>        up|down|tab|return|opt-return|esc|cmd-1..3
 #   scripts/debug.sh state             print picker state as JSON
@@ -27,11 +28,12 @@ case "${1:-}" in
         ./scripts/bundle.sh >/dev/null
         killall LinkRouter 2>/dev/null || true
         sleep 0.5
-        LINKROUTER_CONFIG="${TMP}/linkrouter-debug-config.json" LINKROUTER_DEBUG=1 LINKROUTER_NO_DEFAULT_PROMPT=1 \
+        LINKROUTER_CONFIG="${LINKROUTER_CONFIG:-${TMP}/linkrouter-debug-config.json}" LINKROUTER_DEBUG=1 LINKROUTER_NO_DEFAULT_PROMPT=1 \
             "${APP}/Contents/MacOS/LinkRouter" >/dev/null 2>&1 &
         echo "launched pid $!"
         ;;
     open) open -a "$PWD/${APP}" "$2" ;;
+    demo) post "demo-link:$2" ;;
     query) post "query:$2" ;;
     key) post "key:$2" ;;
     settings) post "settings:$2" ;;
