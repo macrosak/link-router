@@ -9,6 +9,7 @@ import LinkRouterCore
 ///   state          write the picker state as JSON to $TMPDIR/linkrouter-debug.json
 ///   settings:<tab> open Settings on general | browsers | rules
 ///   demo-link:<url> show the picker for <url> with a synthetic IntelliJ source
+///   switch         what the switch-browser hotkey does (picker without a link)
 ///   snapshot:<path> render the picker (or Settings) window to a PNG — works
 ///                  without Screen Recording permission
 @MainActor
@@ -36,6 +37,7 @@ final class DebugHooks {
         case "state": writeState()
         case "settings": app.settings.show(tab: SettingsTab(rawValue: arg) ?? .general)
         case "snapshot": snapshot(to: arg)
+        case "switch": app.showSwitcher()
         case "demo-link":
             guard let url = URL(string: arg) else { return }
             let ctx = LinkContext(url: url, sourceBundleID: "com.jetbrains.intellij", sourceAppName: "IntelliJ IDEA",
@@ -72,7 +74,7 @@ final class DebugHooks {
 
     private func writeState() {
         guard let app else { return }
-        var state: [String: Any] = ["pickerVisible": app.picker.isVisible,
+        var state: [String: Any] = ["pickerVisible": app.picker.isVisible, "accessibility": SourceContext.accessibilityGranted,
                                     "pickerIsKey": NSApp.isActive && NSApp.keyWindow is PickerPanel, "rules": app.store.config.rules.map(\.summary),
                                     "targets": app.store.config.browsers.map(\.id),
                                     "windows": NSApp.windows.map { "\(type(of: $0)) '\($0.title)' sheet=\($0.isSheet) visible=\($0.isVisible)" }]
@@ -83,7 +85,8 @@ final class DebugHooks {
             state["mode"] = vm.mode == .browsers ? "browsers" : "actions"
             state["actions"] = vm.filteredActions.map(\.title)
             state["urls"] = vm.urls.map(\.absoluteString)
-            state["source"] = [vm.context.sourceBundleID ?? "", vm.context.windowTitle ?? ""]
+            state["source"] = [vm.context?.sourceBundleID ?? "", vm.context?.windowTitle ?? ""]
+            state["switching"] = vm.isSwitching
         }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("linkrouter-debug.json")
         if let data = try? JSONSerialization.data(withJSONObject: state, options: [.prettyPrinted, .sortedKeys]) {

@@ -7,6 +7,7 @@ set -euo pipefail
 #                                      isolated config ($TMPDIR/linkrouter-debug-config.json)
 #   scripts/debug.sh open <url>        send a link to it (as a browser would get it)
 #   scripts/debug.sh demo <url>        picker for <url> with a synthetic IntelliJ source
+#   scripts/debug.sh switch            picker without a link (the switch-browser hotkey)
 #   scripts/debug.sh query <text>      set the picker filter
 #   scripts/debug.sh key <name>        up|down|tab|return|esc|cmd-1..3
 #   scripts/debug.sh state             print picker state as JSON
@@ -34,11 +35,12 @@ case "${1:-}" in
         ;;
     open) open -a "$PWD/${APP}" "$2" ;;
     demo) post "demo-link:$2" ;;
+    switch) post "switch" ;;
     query) post "query:$2" ;;
     key) post "key:$2" ;;
     settings) post "settings:$2" ;;
     state) post "state"; sleep 0.3; cat "${TMP}/linkrouter-debug.json" ;;
     shot) post "snapshot:$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"; sleep 0.5; echo "saved $2" ;;
     quit) killall LinkRouter ;;
-    *) sed -n '3,16p' "$0"; exit 1 ;;
+    *) sed -n '3,17p' "$0"; exit 1 ;;
 esac

@@ -17,13 +17,15 @@ enum SettingsTab: String, Hashable, CaseIterable {
 /// a transparent title bar, then the tab body — Recallyx's settings chrome.
 struct SettingsView: View {
     @ObservedObject var store: ConfigStore
+    let shortcutActions: ShortcutActions
     @State private var tab: SettingsTab
 
     @Environment(\.colorScheme) private var colorScheme
     private var theme: SettingsTheme { SettingsTheme.current(colorScheme) }
 
-    init(store: ConfigStore, initialTab: SettingsTab = .general) {
+    init(store: ConfigStore, shortcutActions: ShortcutActions, initialTab: SettingsTab = .general) {
         self.store = store
+        self.shortcutActions = shortcutActions
         self._tab = State(initialValue: initialTab)
     }
 
@@ -33,7 +35,7 @@ struct SettingsView: View {
             ScrollView {
                 Group {
                     switch tab {
-                    case .general: SettingsGeneralView(store: store, theme: theme)
+                    case .general: SettingsGeneralView(store: store, shortcutActions: shortcutActions, theme: theme)
                     case .browsers: SettingsBrowsersView(store: store, theme: theme)
                     case .rules: SettingsRulesView(store: store, theme: theme)
                     }

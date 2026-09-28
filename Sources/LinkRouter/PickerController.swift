@@ -22,9 +22,13 @@ final class PickerController {
 
     var isVisible: Bool { panel?.isVisible == true }
 
+    /// Showing without links: the switch-browser hotkey's picker.
+    var isSwitching: Bool { isVisible && viewModel?.isSwitching == true }
+
+    /// `urls` empty = switch mode (no link bar, no action menu).
     func show(
         urls: [URL],
-        context: LinkContext,
+        context: LinkContext?,
         targets: [BrowserTarget],
         onCreateRule: @escaping (BrowserTarget?, [URL]) -> Void = { _, _ in },
         onOpenSettings: @escaping () -> Void = {},
@@ -66,7 +70,8 @@ final class PickerController {
 
         let rows = max(1, min(targets.count, Self.maxVisibleRows))
         let listHeight = CGFloat(rows) * (PickerView.rowHeight + 1) + 12
-        let size = NSSize(width: Self.width, height: PickerView.chromeHeight - 12 + listHeight)
+        let chrome = PickerView.chromeHeight - (vm.isSwitching ? PickerView.linkBarHeight : 0)
+        let size = NSSize(width: Self.width, height: chrome - 12 + listHeight)
         let hosting = NSHostingView(rootView: PickerView(viewModel: vm, listHeight: listHeight))
         hosting.frame = NSRect(origin: .zero, size: size)
         let panel = PickerPanel(contentView: hosting, size: size)

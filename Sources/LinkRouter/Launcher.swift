@@ -68,7 +68,7 @@ enum Launcher {
     /// Brings the browser forward. Chromium raises the right window itself but
     /// can't take activation from us under macOS 14+ cooperative activation,
     /// so we hand it over explicitly.
-    private static func activate(_ bundleID: String) {
+    static func activate(_ bundleID: String) {
         guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
         let ok: Bool
         if #available(macOS 14.0, *) {

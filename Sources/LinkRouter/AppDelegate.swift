@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import Combine
 import LinkRouterCore
 
@@ -6,7 +7,15 @@ import LinkRouterCore
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = ConfigStore()
     let picker = PickerController()
-    private(set) lazy var settings = SettingsWindowController(store: store)
+    private(set) lazy var settings = SettingsWindowController(store: store, shortcutActions: ShortcutActions(
+        apply: { [weak self] in self?.applySwitchShortcut($0) ?? .failed(OSStatus(eventNotHandledErr)) },
+        suspend: { [weak self] in self?.hotkey?.suspend() },
+        resume: { [weak self] in
+            guard let self else { return }
+            self.hotkey?.resume(self.store.config.switchShortcut)
+        }
+    ))
+    private var hotkey: HotkeyManager?
     private var statusItem: NSStatusItem?
     private var cancellables: Set<AnyCancellable> = []
     private var debugHooks: DebugHooks?
@@ -31,6 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.$config.map(\.showMenuBarIcon).removeDuplicates()
             .sink { [weak self] show in self?.setStatusItemVisible(show) }
             .store(in: &cancellables)
+
+        let hotkey = HotkeyManager { [weak self] in self?.showSwitcher() }
+        self.hotkey = hotkey
+        if case .failed(let status) = hotkey.apply(store.config.switchShortcut) {
+            Log.error("switch shortcut \(store.config.switchShortcut.glyphs.joined()) not registered (\(status)) — change it in Settings")
+        }
 
         if ProcessInfo.processInfo.environment["LINKROUTER_DEBUG"] == "1" {
             debugHooks = DebugHooks(app: self)
@@ -104,6 +119,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Switching
+
+    /// The switch-browser hotkey: the picker without a link. Pressing it again
+    /// while the switcher is up closes it; a link picker is left alone.
+    func showSwitcher() {
+        if picker.isSwitching { picker.dismiss(); return }
+        guard !picker.isVisible else { return }
+        // Incognito entries open a new private window rather than switch.
+        let targets = store.config.enabledBrowsers.filter { !$0.incognito }
+        guard !targets.isEmpty else { settings.show(tab: .browsers); return }
+        picker.show(urls: [], context: nil, targets: targets, onOpenSettings: { [weak self] in
+            self?.settings.show(tab: .general)
+        }) { target, _, _ in
+            BrowserSwitcher.switchTo(target)
+        }
+    }
+
+    /// Single mutation point for the shortcut: Carbon first, the config only
+    /// once it registered (or was disabled).
+    private func applySwitchShortcut(_ shortcut: Shortcut) -> HotkeyManager.ApplyResult {
+        guard let hotkey else { return .failed(OSStatus(eventNotHandledErr)) }
+        let result = hotkey.apply(shortcut)
+        if case .failed = result { return result }
+        store.config.switchShortcut = shortcut
+        return result
+    }
+
     /// "Record new rule…" in the picker: edit a pre-filled rule in Settings. Saving stores it
     /// and opens the link where the rule says; cancelling brings the picker back.
     private func captureRule(for urls: [URL], context ctx: LinkContext, suggestedTarget: BrowserTarget) {
@@ -170,6 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openBrowsers() { settings.show(tab: .browsers) }
     @objc private func openRules() { settings.show(tab: .rules) }
     @objc private func makeDefault() { DefaultBrowser.claim() }
+    @objc private func switchBrowser() { showSwitcher() }
     @objc private func openClipboardLink() {
         guard let s = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines),
               let url = URL(string: s), url.scheme?.hasPrefix("http") == true else { NSSound.beep(); return }
@@ -191,6 +234,7 @@ extension AppDelegate: NSMenuDelegate {
             menu.addItem(.separator())
         }
         add("Open Link from Clipboard…", #selector(openClipboardLink))
+        add("Switch to Browser…", #selector(switchBrowser))
         menu.addItem(.separator())
         add("Settings…", #selector(openSettings), ",")
         add("Browsers…", #selector(openBrowsers))
