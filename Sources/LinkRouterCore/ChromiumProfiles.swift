@@ -5,6 +5,32 @@ public struct ChromiumProfile: Equatable, Sendable {
     public let directory: String
     public let name: String
     public let email: String?
+    /// First name of the signed-in account (`gaia_given_name`).
+    public var givenName: String? = nil
+    /// The name is Chromium's placeholder ("Person 1", "Your Chrome"…).
+    public var usesDefaultName: Bool = false
+
+    public init(directory: String, name: String, email: String?, givenName: String? = nil, usesDefaultName: Bool = false) {
+        self.directory = directory
+        self.name = name
+        self.email = email
+        self.givenName = givenName
+        self.usesDefaultName = usesDefaultName
+    }
+
+    /// How the browser labels this profile in its Profiles menu, most likely
+    /// first. Chromium shows the account's first name next to a custom
+    /// profile name ("Michal (Work)"), just the first name when the two are
+    /// equal or the profile name is a placeholder, else the profile name.
+    public var menuTitles: [String] {
+        guard let given = givenName, !given.isEmpty, given != name else { return [name] }
+        return usesDefaultName ? [given, name] : ["\(given) (\(name))", name]
+    }
+
+    /// Whether a Profiles-menu item title belongs to this profile.
+    public func matchesMenuTitle(_ title: String) -> Bool {
+        menuTitles.contains(title) || title.hasSuffix("(\(name))")
+    }
 }
 
 /// Knows where each Chromium-family browser keeps its user-data directory and
@@ -56,7 +82,9 @@ public enum ChromiumProfiles {
             guard let info = value as? [String: Any] else { return nil }
             let name = (info["name"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? dir
             let email = (info["user_name"] as? String).flatMap { $0.isEmpty ? nil : $0 }
-            return ChromiumProfile(directory: dir, name: name, email: email)
+            let given = (info["gaia_given_name"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            return ChromiumProfile(directory: dir, name: name, email: email, givenName: given,
+                                   usesDefaultName: info["is_using_default_name"] as? Bool ?? false)
         }
 
         let order = profile["profiles_order"] as? [String] ?? []
