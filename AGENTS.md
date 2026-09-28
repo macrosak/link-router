@@ -40,3 +40,13 @@ swift test                        # or ./scripts/test.sh
 
 Don't commit real Chrome profile data / avatars — docs screenshots come from
 `scripts/screenshots.sh` + `scripts/demo-config.json`.
+
+## Pull requests
+
+- **Any UI change needs a screenshot in the PR.** If a PR changes what the picker, Settings, menu
+  bar or any other UI looks like, the PR description must show it (before/after when something
+  existing changed). Render it with `scripts/screenshots.sh` (README images, commit the updated
+  `docs/*.png`) or `scripts/debug.sh shot <file.png>` for other states, always from the demo
+  config (`scripts/demo-config.json`) so no real accounts or avatars get published. Embed images
+  pushed to the branch with
+  `![…](https://github.com/macrosak/link-router/blob/<branch>/<path>?raw=true)`.
