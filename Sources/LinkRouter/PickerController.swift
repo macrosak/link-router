@@ -104,8 +104,14 @@ final class PickerController {
     }
 
     private func installMonitors() {
+        // Not `self?.handleKeyDown(e) ?? e`: optional chaining flattens the
+        // handler's `nil` ("consumed") into the same `nil` as "self is gone",
+        // and `?? e` then re-delivers every handled key to the window — the
+        // text field beeps on esc, and ↵ lands after the panel has closed, so
+        // AppKit plays its "unhandled key" alert sound.
         if let m = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
-            self?.handleKeyDown(e) ?? e
+            guard let self else { return e }
+            return self.handleKeyDown(e)
         }) { monitors.append(m) }
         if let m = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] e in
             self?.viewModel?.commandHeld = e.modifierFlags.contains(.command)
