@@ -14,6 +14,25 @@ public struct InstalledBrowser: Equatable, Sendable {
 }
 
 public enum BrowserCatalog {
+    /// Apps that register as web browsers but aren't useful targets: other
+    /// link pickers (routing to them would bounce the link again) and
+    /// terminals that claim http(s).
+    public static let excludedBundleIDs: Set<String> = [
+        "com.mattsenter.Burly",
+        "com.sindresorhus.Velja",
+        "com.choosyosx.Choosy",
+        "net.kassett.finicky",
+        "com.will-stone.browserosaurus",
+        "com.loshadki.OpenIn",
+        "com.loshadki.OpenIn4",
+        "com.monokai.bumpr",
+        "com.googlecode.iterm2",
+    ]
+
+    public static func isCandidate(bundleID: String) -> Bool {
+        !excludedBundleIDs.contains(bundleID)
+    }
+
     /// Expands installed browsers into picker targets: one per profile for a
     /// Chromium browser with readable profiles, one plain entry otherwise.
     public static func targets(

@@ -56,3 +56,12 @@ struct CatalogTests {
         #expect(merged[2].enabled)
     }
 }
+
+@Suite("Browser exclusions")
+struct ExclusionTests {
+    @Test func otherPickersAreExcluded() {
+        #expect(!BrowserCatalog.isCandidate(bundleID: "com.mattsenter.Burly"))
+        #expect(!BrowserCatalog.isCandidate(bundleID: "com.sindresorhus.Velja"))
+        #expect(BrowserCatalog.isCandidate(bundleID: "com.google.Chrome"))
+    }
+}
