@@ -14,6 +14,10 @@ cp scripts/demo-config.json "${LINKROUTER_CONFIG}"
 sleep 2
 ./scripts/debug.sh demo "https://github.com/acme/api/pull/412"; sleep 0.8
 ./scripts/debug.sh shot "$PWD/docs/picker.png"
+./scripts/debug.sh key down
+./scripts/debug.sh key tab; sleep 0.4
+./scripts/debug.sh shot "$PWD/docs/actions.png"
+./scripts/debug.sh key esc
 ./scripts/debug.sh key esc
 ./scripts/debug.sh settings browsers; sleep 1
 ./scripts/debug.sh shot "$PWD/docs/browsers.png"
