@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Link Router: every link in the right browser</title>
+  <meta name="description" content="Link Router is a free, open-source default browser for macOS that sends each link to the right browser or Chrome profile, by rule or through a keyboard-first picker.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Link Router">
+  <meta property="og:description" content="Every link in the right browser or Chrome profile. Rules on URL, app and window; a picker you drive from the keyboard.">
+  <meta property="og:image" content="https://macrosak.github.io/link-router/assets/icon-256.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121315" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#">
+        <img src="assets/icon-256.png" width="28" height="28" alt="">
+        Link Router
+      </a>
+      <nav>
+        <a href="#rules">Rules</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/macrosak/link-router">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <h1>Every link,<br>in the <em>right</em> browser.</h1>
+      <p class="lede">
+        Link Router takes the place of your default browser on macOS. A click either goes
+        straight to the browser or Chrome profile a rule picks, or brings up a small picker:
+        type two letters, press <kbd>↵</kbd>.
+      </p>
+      <div class="cta">
+        <div class="cmd" data-copy>
+          <code>curl -fsSL https://raw.githubusercontent.com/macrosak/link-router/main/install.sh | bash</code>
+          <button type="button" data-copy-btn>Copy</button>
+        </div>
+        <p class="meta">
+          or <a href="https://github.com/macrosak/link-router/releases/latest">download the DMG</a>
+          · macOS 13+, Apple silicon · free and MIT-licensed<span id="version"></span>
+        </p>
+      </div>
+      <figure class="shot shot-hero">
+        <img src="assets/picker.png" width="1200" height="770"
+             alt="The Link Router picker: a search field, the link github.com/acme/api/pull/412, and a list of Chrome profiles (Personal, Work, Client, Side project) plus Safari.">
+      </figure>
+    </section>
+
+    <section class="band" id="rules">
+      <div class="wrap split">
+        <div class="prose">
+          <h2>Rules that know where you clicked.</h2>
+          <p>
+            A rule can look at the URL, the app the link came from, and that app's window
+            title. IDEs put the project name in the title, so every IntelliJ project window can
+            open its links in its own Chrome profile.
+          </p>
+          <p>
+            The first matching rule opens the link directly. Nothing matches? You get the
+            picker. Hold <kbd>⌥</kbd> while clicking to get it anyway.
+          </p>
+        </div>
+
+        <div class="router">
+          <table class="rules">
+            <thead><tr><th>When the link…</th><th>Opens in</th></tr></thead>
+            <tbody>
+              <tr data-rule="1"><td>starts with <code>github.com/acme</code></td><td><span class="dot" style="--c:#8e4ec6">W</span>Work</td></tr>
+              <tr data-rule="2"><td>comes from IntelliJ IDEA, window <code>globex-portal</code></td><td><span class="dot" style="--c:#3e9b8a">C</span>Client — Globex</td></tr>
+              <tr data-rule="3"><td>starts with <code>*.atlassian.net</code></td><td><span class="dot" style="--c:#8e4ec6">W</span>Work</td></tr>
+              <tr data-rule="0" class="fallback"><td>matches nothing else</td><td>the picker</td></tr>
+            </tbody>
+          </table>
+          <div class="try">
+            <p class="try-label">Click a link to see where it goes</p>
+            <button type="button" data-hit="1"><span>Slack</span>github.com/acme/api/pull/412</button>
+            <button type="button" data-hit="2"><span>IntelliJ · globex-portal</span>localhost:8080/admin</button>
+            <button type="button" data-hit="3"><span>Mail</span>acme.atlassian.net/browse/API-7</button>
+            <button type="button" data-hit="0"><span>Messages</span>news.ycombinator.com</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap speed">
+      <h2>Fast enough that you stop noticing.</h2>
+      <div class="stats">
+        <div><strong>~5&nbsp;ms</strong><span>to hand a link to a running Chrome profile</span></div>
+        <div><strong>~20&nbsp;ms</strong><span>until the picker is on screen</span></div>
+        <div class="muted"><strong>1–2&nbsp;s</strong><span>what <code>open -na … --profile-directory</code> takes, the usual trick</span></div>
+      </div>
+      <p class="prose narrow">
+        Other link pickers launch a second copy of the browser just to pass it a URL and a
+        profile. Link Router writes the request straight into the socket the running browser
+        already listens on, the same way Chrome's own second instance would. Chrome, Brave,
+        Edge, Vivaldi and Chromium work this way; every other browser opens normally.
+      </p>
+    </section>
+
+    <section class="band">
+      <div class="wrap split split-rev">
+        <figure class="shot">
+          <img src="assets/actions.png" width="1200" height="770" loading="lazy"
+               alt="The picker's action menu: Record new rule, Always open in Work, Copy link to clipboard, Open Settings.">
+        </figure>
+        <div class="prose">
+          <h2>Driven from the keyboard.</h2>
+          <dl class="keys">
+            <div><dt><i>type</i></dt><dd>filter browsers and profiles, by name or account</dd></div>
+            <div><dt><kbd>↵</kbd></dt><dd>open in the first match</dd></div>
+            <div><dt><kbd>⌘</kbd><kbd>1</kbd>–<kbd>9</kbd></dt><dd>open in the Nth browser</dd></div>
+            <div><dt><kbd>⇥</kbd></dt><dd>actions: record a rule for links like this one, always use this browser, copy the link</dd></div>
+            <div><dt><kbd>esc</kbd></dt><dd>step back, then close</dd></div>
+          </dl>
+          <p>
+            Every Chromium profile is listed with its account, plus an Incognito entry. Rename
+            them, reorder them, hide the ones you never use.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap settings">
+      <div class="pair">
+        <figure class="shot">
+          <img src="assets/browsers.png" width="1440" height="850" loading="lazy"
+               alt="Settings, Browsers tab: Chrome profiles and Safari in picker order, each with a rename button and an on/off switch.">
+          <figcaption>Browsers and profiles, in picker order. Drag to reorder.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/rules.png" width="1440" height="800" loading="lazy"
+               alt="Settings, Rules tab: three rules, each showing its conditions and the Chrome profile it opens in.">
+          <figcaption>Rules, checked top to bottom.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" id="install">
+      <div class="wrap install">
+        <h2>Install</h2>
+        <ol>
+          <li>
+            <p>Run this in Terminal. It installs the latest release (or updates it) and launches it.</p>
+            <div class="cmd" data-copy>
+              <code>curl -fsSL https://raw.githubusercontent.com/macrosak/link-router/main/install.sh | bash</code>
+              <button type="button" data-copy-btn>Copy</button>
+            </div>
+          </li>
+          <li>
+            <p>Say yes when it offers to become your default browser. macOS asks you to confirm.</p>
+          </li>
+          <li>
+            <p>
+              Optional: for window-title rules, grant Accessibility in
+              <b>Settings → General</b>, then relaunch. Releases share one signing identity,
+              so the grant survives updates.
+            </p>
+          </li>
+        </ol>
+        <p class="aside">
+          Prefer the DMG? Get it from <a href="https://github.com/macrosak/link-router/releases/latest">Releases</a>,
+          drag the app to Applications and run
+          <code>xattr -dr com.apple.quarantine "/Applications/Link Router.app"</code> once, since
+          the builds aren't notarized. The <a href="https://github.com/macrosak/link-router#readme">README</a>
+          covers building from source and troubleshooting.
+        </p>
+      </div>
+    </section>
+
+    <section class="wrap more">
+      <h2>Other tools</h2>
+      <a class="tool" href="https://recallyx.app">
+        <img src="assets/recallyx-128.png" width="64" height="64" alt="">
+        <div>
+          <h3>Recallyx <span>recallyx.app →</span></h3>
+          <p>
+            A clipboard manager for macOS that keeps everything you copy and runs script and
+            AI actions on any clip. Link Router borrows its look and its keyboard habits.
+          </p>
+        </div>
+      </a>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>Link Router · MIT</span>
+    <nav>
+      <a href="https://github.com/macrosak/link-router">Source</a>
+      <a href="https://github.com/macrosak/link-router/releases">Releases</a>
+      <a href="https://github.com/macrosak/link-router/issues">Issues</a>
+    </nav>
+  </footer>
+
+  <script>
+    // Copy buttons; the command stays selectable without JS.
+    document.querySelectorAll('[data-copy]').forEach(function (box) {
+      var btn = box.querySelector('[data-copy-btn]');
+      var text = box.querySelector('code').textContent.trim();
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+        });
+      });
+    });
+
+    // "Click a link": highlight the rule it would hit.
+    var rows = document.querySelectorAll('.rules tbody tr');
+    var tries = document.querySelectorAll('.try button');
+    tries.forEach(function (b) {
+      b.addEventListener('click', function () {
+        tries.forEach(function (o) { o.classList.toggle('on', o === b); });
+        rows.forEach(function (r) {
+          r.classList.toggle('hit', r.dataset.rule === b.dataset.hit);
+        });
+      });
+    });
+
+    // Latest version next to the download link; left out when offline.
+    fetch('https://api.github.com/repos/macrosak/link-router/releases/latest')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.tag_name) document.getElementById('version').textContent = ' · v' + d.tag_name.replace(/^v/, ''); })
+      .catch(function () {});
+  </script>
+</body>
+</html>
