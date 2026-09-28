@@ -15,6 +15,8 @@ repo layout, scripts, and release workflow.
   `SourceContext` (source app + AX window title), `Launcher`, `PickerController`/`PickerView`,
   `Settings*View`, `DebugHooks`.
 - `Tests/LinkRouterTests` — swift-testing.
+- `site/` — product page on GitHub Pages (`.github/workflows/pages.yml`); the screenshots come from
+  `docs/` at deploy time. Preview with `./scripts/site.sh serve`.
 
 ## Key decisions
 
