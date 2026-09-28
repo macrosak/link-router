@@ -41,6 +41,7 @@ struct CatalogTests {
     @Test func mergeKeepsOrderAndFlagsAppendsNewDropsGone() {
         var s1 = BrowserTarget(bundleID: "safari", appPath: "/S.app", appName: "Safari")
         s1.enabled = false
+        s1.customName = "Personal"
         let c1 = BrowserTarget(bundleID: "chrome", appPath: "/C.app", appName: "Chrome")
         let gone = BrowserTarget(bundleID: "old", appPath: "/O.app", appName: "Old")
         let saved = [s1, gone, c1]
@@ -52,6 +53,7 @@ struct CatalogTests {
         let merged = BrowserCatalog.merge(saved: saved, detected: detected)
         #expect(merged.map(\.id) == ["safari", "chrome", "firefox"])
         #expect(merged[0].enabled == false)
+        #expect(merged[0].title == "Personal")
         #expect(merged[1].appPath == "/new/C.app")
         #expect(merged[2].enabled)
     }
@@ -63,5 +65,17 @@ struct ExclusionTests {
         #expect(!BrowserCatalog.isCandidate(bundleID: "com.mattsenter.Burly"))
         #expect(!BrowserCatalog.isCandidate(bundleID: "com.sindresorhus.Velja"))
         #expect(BrowserCatalog.isCandidate(bundleID: "com.google.Chrome"))
+    }
+}
+
+@Suite("Custom names")
+struct CustomNameTests {
+    @Test func customNameWinsButDetectedStaysSearchable() {
+        var t = BrowserTarget(bundleID: "c", appPath: "/", appName: "Google Chrome", profileDirectory: "Profile 2", profileName: "Work")
+        t.customName = "tado"
+        #expect(t.title == "tado")
+        #expect(FuzzyMatcher.filter([t], query: "work").count == 1)
+        t.customName = "  "
+        #expect(t.title == "Work")
     }
 }

@@ -187,6 +187,8 @@ struct SettingsField: View {
     /// (not `onChange` of the binding) for anything with side effects, so
     /// half-typed values are never applied.
     var onEditingEnded: (() -> Void)? = nil
+    /// Take keyboard focus as soon as the field appears (inline rename).
+    var autoFocus: Bool = false
 
     @FocusState private var focused: Bool
 
@@ -206,6 +208,7 @@ struct SettingsField: View {
             .focused($focused)
             .onSubmit { onEditingEnded?() }
             .onChange(of: focused) { if !$0 { onEditingEnded?() } }
+            .onAppear { if autoFocus { DispatchQueue.main.async { focused = true } } }
     }
 }
 

@@ -20,6 +20,8 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
     /// The signed-in account of the profile, if any.
     public var profileEmail: String?
     public var enabled: Bool
+    /// User-chosen label shown instead of the detected name; nil = detected.
+    public var customName: String?
 
     public init(
         bundleID: String,
@@ -45,8 +47,15 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
         return "\(bundleID)#\(profileDirectory)"
     }
 
-    /// Primary label: the profile name for a profile, else the app name.
+    /// Primary label: the custom name, else the profile name for a profile,
+    /// else the app name.
     public var title: String {
+        if let customName, !customName.trimmingCharacters(in: .whitespaces).isEmpty { return customName }
+        return detectedName
+    }
+
+    /// The name detection found (profile name or app name).
+    public var detectedName: String {
         if let profileName, !profileName.isEmpty { return profileName }
         return appName
     }
@@ -61,6 +70,6 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
 
     /// Everything the picker's type-to-filter searches.
     public var searchFields: [String] {
-        [title, appName, profileEmail ?? ""].filter { !$0.isEmpty }
+        [title, detectedName, appName, profileEmail ?? ""].filter { !$0.isEmpty }
     }
 }

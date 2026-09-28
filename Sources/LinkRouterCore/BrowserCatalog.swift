@@ -51,13 +51,14 @@ public enum BrowserCatalog {
     }
 
     /// Merges a fresh detection into the saved list: saved entries keep their
-    /// position and enabled flag (metadata is refreshed), new entries are
+    /// position, enabled flag and custom name (metadata is refreshed), new entries are
     /// appended enabled, entries no longer installed are dropped.
     public static func merge(saved: [BrowserTarget], detected: [BrowserTarget]) -> [BrowserTarget] {
         let fresh = Dictionary(detected.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         var result: [BrowserTarget] = saved.compactMap { old in
             guard var updated = fresh[old.id] else { return nil }
             updated.enabled = old.enabled
+            updated.customName = old.customName
             return updated
         }
         let known = Set(result.map(\.id))

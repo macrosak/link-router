@@ -7,6 +7,9 @@ struct SettingsBrowsersView: View {
     let theme: SettingsTheme
 
     @State private var dragging: String?
+    /// Row being renamed, and its draft name.
+    @State private var renaming: String?
+    @State private var draftName = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,7 +34,7 @@ struct SettingsBrowsersView: View {
                     }
                 }
             }
-            Text("Drag rows (or use the arrows) to reorder. Disabled entries are hidden from the picker; rules pointing at them fall back to the picker. Chromium-family browsers (Chrome, Brave, Edge, Vivaldi…) are listed per profile.")
+            Text("Drag rows (or use the arrows) to reorder. Double-click a name (or the pencil) to rename it; clear the name to go back to the detected one. Disabled entries are hidden from the picker; rules pointing at them fall back to the picker. Chromium-family browsers (Chrome, Brave, Edge, Vivaldi…) are listed per profile.")
                 .font(.system(size: 11.5))
                 .foregroundStyle(theme.textDim)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,12 +51,22 @@ struct SettingsBrowsersView: View {
             TargetIconView(target: t, size: 24)
                 .opacity(t.enabled ? 1 : 0.4)
             VStack(alignment: .leading, spacing: 1) {
-                Text(t.title).font(.system(size: 13.5)).foregroundStyle(t.enabled ? theme.text : theme.textFaint)
-                if !t.subtitle.isEmpty {
-                    Text(t.subtitle).font(.system(size: 11.5)).foregroundStyle(theme.textDim)
+                if renaming == t.id {
+                    SettingsField(text: $draftName, placeholder: t.detectedName, width: 240, theme: theme,
+                                  onEditingEnded: { commitRename(t.id) }, autoFocus: true)
+                    .onExitCommand { renaming = nil }
+                } else {
+                    Text(t.title).font(.system(size: 13.5)).foregroundStyle(t.enabled ? theme.text : theme.textFaint)
+                        .onTapGesture(count: 2) { startRename(t) }
+                }
+                let sub = [t.customName != nil && t.title != t.detectedName ? t.detectedName : nil, t.subtitle.isEmpty ? nil : t.subtitle]
+                    .compactMap { $0 }.joined(separator: " · ")
+                if !sub.isEmpty {
+                    Text(sub).font(.system(size: 11.5)).foregroundStyle(theme.textDim)
                 }
             }
             Spacer()
+            arrow("pencil", enabled: true) { renaming == t.id ? commitRename(t.id) : startRename(t) }
             arrow("chevron.up", enabled: idx > 0) { move(idx, by: -1) }
             arrow("chevron.down", enabled: !last) { move(idx, by: 1) }
             Toggle("", isOn: Binding(
@@ -76,6 +89,19 @@ struct SettingsBrowsersView: View {
         .buttonStyle(.plain)
         .foregroundStyle(enabled ? theme.textDim : theme.textFaint.opacity(0.4))
         .disabled(!enabled)
+    }
+
+    private func startRename(_ t: BrowserTarget) {
+        draftName = t.title
+        renaming = t.id
+    }
+
+    /// Empty (or unchanged-from-detected) clears the custom name.
+    private func commitRename(_ id: String) {
+        guard renaming == id, let i = store.config.browsers.firstIndex(where: { $0.id == id }) else { return }
+        let name = draftName.trimmingCharacters(in: .whitespaces)
+        store.config.browsers[i].customName = name.isEmpty || name == store.config.browsers[i].detectedName ? nil : name
+        renaming = nil
     }
 
     private func move(_ idx: Int, by delta: Int) {

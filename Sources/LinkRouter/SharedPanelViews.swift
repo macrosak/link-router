@@ -37,6 +37,8 @@ struct HintBar: View {
                 Text(left)
                     .font(.system(size: 12))
                     .foregroundStyle(theme.textFaint)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
             Spacer(minLength: 0)
             ForEach(items) { item in
