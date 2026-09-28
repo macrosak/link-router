@@ -72,7 +72,8 @@ final class DebugHooks {
 
     private func writeState() {
         guard let app else { return }
-        var state: [String: Any] = ["pickerVisible": app.picker.isVisible, "rules": app.store.config.rules.map(\.summary),
+        var state: [String: Any] = ["pickerVisible": app.picker.isVisible,
+                                    "pickerIsKey": NSApp.isActive && NSApp.keyWindow is PickerPanel, "rules": app.store.config.rules.map(\.summary),
                                     "targets": app.store.config.browsers.map(\.id),
                                     "windows": NSApp.windows.map { "\(type(of: $0)) '\($0.title)' sheet=\($0.isSheet) visible=\($0.isVisible)" }]
         if let vm = app.picker.viewModel {
