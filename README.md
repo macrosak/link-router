@@ -68,6 +68,7 @@ or **Settings → General → Make default**.
 | `↵` | Open in the selected browser (the first match while filtering) |
 | `⌘1`–`⌘9` | Open in the Nth browser — hold `⌘` to see the numbers |
 | `⌥↵` | Open **and always use it** for this app + window (saves a rule) |
+| `⌘R` | **Create a rule for links like this** — opens the rule editor pre-filled from the link |
 | `⌘C` | Copy the link and close |
 | `esc` | Clear the filter; press again to close |
 | click | Open in the clicked browser (`⌥`-click = always) |
@@ -101,9 +102,15 @@ condition you set on a rule must match:
   project name in the title (`link-router – Launcher.swift`), so this is how you route per
   project. Needs **Accessibility** (see below).
 
-The fastest way to create one: in the picker press **`⌥↵`** — it saves a rule for the current
-app and the project part of its window title. Or use **Settings → Rules → Recent links →
-Create rule…**, which pre-fills everything from a link you actually clicked.
+Three ways to create one without typing patterns by hand:
+
+- **`⌘R` in the picker — "create a rule for links like this".** The editor opens pre-filled with
+  the link's host, the source app and the project part of its window title, plus a live
+  *matches this link* check. Clear what you don't need, pick the browser, **Save** — the rule is
+  stored and the link opens with it. Cancel brings the picker back.
+- **`⌥↵` in the picker** — open and silently save a rule for the current app + window project.
+- **Settings → Rules → Recent links → Create rule…** — same pre-filled editor for any link
+  routed since launch.
 
 <p align="center">
   <img src="docs/rules.png" alt="Rules settings" width="620">
