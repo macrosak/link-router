@@ -7,7 +7,15 @@ struct SettingsRulesView: View {
     @ObservedObject var store: ConfigStore
     let theme: SettingsTheme
 
-    @State private var editing: Rule?
+    @State private var editing: EditRequest?
+
+    /// What the editor sheet is showing: a rule, plus the picker draft it came
+    /// from when capturing (⌘R).
+    struct EditRequest: Identifiable {
+        let rule: Rule
+        var draft: RuleDraft?
+        var id: UUID { rule.id }
+    }
 
     var body: some View {
         VStack(spacing: 17) {
@@ -15,7 +23,7 @@ struct SettingsRulesView: View {
                 HStack(alignment: .bottom) {
                     SectionLabel(text: "Rules — first match opens directly", theme: theme)
                     SettingsButton(title: "Add rule", kind: .primary, theme: theme) {
-                        editing = Rule(targetID: store.config.enabledBrowsers.first?.id ?? "")
+                        editing = EditRequest(rule: Rule(targetID: store.config.enabledBrowsers.first?.id ?? ""))
                     }
                     .padding(.bottom, 6)
                 }
@@ -47,8 +55,8 @@ struct SettingsRulesView: View {
                 }
             }
         }
-        .sheet(item: $editing) { rule in
-            RuleEditor(rule: rule, store: store, theme: theme) { saved in
+        .sheet(item: $editing) { req in
+            RuleEditor(rule: req.rule, store: store, theme: theme, testContext: req.draft?.context) { saved in
                 if let saved {
                     if let i = store.config.rules.firstIndex(where: { $0.id == saved.id }) {
                         store.config.rules[i] = saved
@@ -57,8 +65,16 @@ struct SettingsRulesView: View {
                     }
                 }
                 editing = nil
+                req.draft?.finish(saved)
             }
         }
+        .onAppear(perform: pickUpDraft)
+        .onChange(of: store.ruleDraft?.id) { _ in pickUpDraft() }
+    }
+
+    private func pickUpDraft() {
+        guard let d = store.ruleDraft, editing?.draft?.id != d.id else { return }
+        editing = EditRequest(rule: d.rule, draft: d)
     }
 
     private func target(_ id: String) -> BrowserTarget? { store.config.browsers.first { $0.id == id } }
@@ -91,14 +107,14 @@ struct SettingsRulesView: View {
             Spacer()
             iconButton("chevron.up", enabled: idx > 0) { store.config.rules.swapAt(idx, idx - 1) }
             iconButton("chevron.down", enabled: !last) { store.config.rules.swapAt(idx, idx + 1) }
-            iconButton("pencil", enabled: true) { editing = rule }
+            iconButton("pencil", enabled: true) { editing = EditRequest(rule: rule) }
             iconButton("trash", enabled: true) { store.config.rules.removeAll { $0.id == rule.id } }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
         .overlay(alignment: .bottom) { if !last { Rectangle().fill(theme.rowSep).frame(height: 0.5) } }
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { editing = rule }
+        .onTapGesture(count: 2) { editing = EditRequest(rule: rule) }
     }
 
     private func recentRow(_ link: RecentLink, last: Bool) -> some View {
@@ -119,7 +135,7 @@ struct SettingsRulesView: View {
             SettingsButton(title: "Create rule…", theme: theme) {
                 let targetID = store.config.browsers.first { $0.title == link.targetTitle }?.id
                     ?? store.config.enabledBrowsers.first?.id ?? ""
-                editing = Rule.suggested(from: link.context, targetID: targetID)
+                editing = EditRequest(rule: Rule.captured(from: link.context, targetID: targetID))
             }
         }
         .padding(.horizontal, 14)
@@ -142,6 +158,8 @@ struct RuleEditor: View {
     @State var rule: Rule
     @ObservedObject var store: ConfigStore
     let theme: SettingsTheme
+    /// The link a captured rule came from; shows whether the rule still matches it.
+    var testContext: LinkContext? = nil
     let done: (Rule?) -> Void
 
     private var apps: [(id: String, name: String)] {
@@ -164,9 +182,25 @@ struct RuleEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(store.config.rules.contains { $0.id == rule.id } ? "Edit rule" : "New rule")
+            Text(store.config.rules.contains { $0.id == rule.id } ? "Edit rule" : (testContext != nil ? "Create a rule for links like this" : "New rule"))
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(theme.text)
+            if let ctx = testContext {
+                let hit = rule.matches(ctx)
+                HStack(spacing: 6) {
+                    Image(systemName: hit ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundStyle(hit ? Color(hex: 0x30D158) : theme.bad)
+                    Text(hit ? "Matches this link" : "Doesn't match this link")
+                        .foregroundStyle(theme.text)
+                    Text(ctx.url.absoluteString)
+                        .font(.system(size: 11.5, design: .monospaced))
+                        .foregroundStyle(theme.textDim)
+                        .lineLimit(1).truncationMode(.middle)
+                }
+                .font(.system(size: 12.5))
+                Text(verbatim: "Pre-filled from the link — clear any condition you don't need. Saving opens the link with this rule.")
+                    .font(.system(size: 11.5)).foregroundStyle(theme.textDim)
+            }
 
             SettingsCard(theme: theme) {
                 SettingsRow(label: "URL", desc: "Leave empty to match any link.", theme: theme) {

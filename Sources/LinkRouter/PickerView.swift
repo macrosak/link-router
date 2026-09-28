@@ -35,6 +35,7 @@ struct PickerView: View {
         return [
             HintItem(keys: ["↵"], label: "Open"),
             HintItem(keys: ["⌥", "↵"], label: "Always"),
+            HintItem(keys: ["⌘", "R"], label: "Rule…"),
             HintItem(keys: ["esc"], label: "Close"),
         ]
     }

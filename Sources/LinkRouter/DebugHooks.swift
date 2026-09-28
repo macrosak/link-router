@@ -5,7 +5,7 @@ import LinkRouterCore
 /// (see scripts/debug.sh). Commands arrive as distributed notifications
 /// named `io.github.macrosak.linkrouter.debug` with the command in `object`:
 ///   query:<text>   set the picker's filter
-///   key:<name>     up | down | return | opt-return | esc | tab | cmd-<1-9>
+///   key:<name>     up | down | return | opt-return | esc | tab | cmd-r | cmd-<1-3>
 ///   state          write the picker state as JSON to $TMPDIR/linkrouter-debug.json
 ///   settings:<tab> open Settings on general | browsers | rules
 ///   demo-link:<url> show the picker for <url> with a synthetic IntelliJ source
@@ -49,11 +49,12 @@ final class DebugHooks {
         let codes: [String: (UInt16, NSEvent.ModifierFlags)] = [
             "up": (0x7E, []), "down": (0x7D, []), "return": (0x24, []), "opt-return": (0x24, .option),
             "esc": (0x35, []), "tab": (0x30, []),
-            "cmd-1": (0x12, .command), "cmd-2": (0x13, .command), "cmd-3": (0x14, .command),
+            "cmd-r": (0x0F, .command), "cmd-1": (0x12, .command), "cmd-2": (0x13, .command), "cmd-3": (0x14, .command),
         ]
+        let chars = name == "cmd-r" ? "r" : ""
         guard let (code, flags) = codes[name],
               let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0,
-                                           windowNumber: 0, context: nil, characters: "", charactersIgnoringModifiers: "",
+                                           windowNumber: 0, context: nil, characters: chars, charactersIgnoringModifiers: chars,
                                            isARepeat: false, keyCode: code)
         else { Log.error("debug: unknown key \(name)"); return }
         _ = app?.picker.handleKeyDown(event)
@@ -61,6 +62,7 @@ final class DebugHooks {
 
     private func snapshot(to path: String) {
         let window = NSApp.windows.first { $0 is PickerPanel && $0.isVisible }
+            ?? NSApp.windows.first { $0.isSheet && $0.isVisible }
             ?? NSApp.windows.first { $0.isVisible && $0.title == "Link Router Settings" }
         guard let view = window?.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
@@ -71,7 +73,8 @@ final class DebugHooks {
     private func writeState() {
         guard let app else { return }
         var state: [String: Any] = ["pickerVisible": app.picker.isVisible, "rules": app.store.config.rules.map(\.summary),
-                                    "targets": app.store.config.browsers.map(\.id)]
+                                    "targets": app.store.config.browsers.map(\.id),
+                                    "windows": NSApp.windows.map { "\(type(of: $0)) '\($0.title)' sheet=\($0.isSheet) visible=\($0.isVisible)" }]
         if let vm = app.picker.viewModel {
             state["query"] = vm.query
             state["filtered"] = vm.filtered.map(\.id)

@@ -12,6 +12,9 @@ final class ConfigStore: ObservableObject {
     /// recent link" in Settings. In memory only.
     @Published private(set) var recentLinks: [RecentLink] = []
 
+    /// A rule being captured from the picker (⌘R), shown in Settings → Rules.
+    @Published var ruleDraft: RuleDraft?
+
     private let url: URL
 
     init(url: URL = Config.defaultURL) {
@@ -43,4 +46,13 @@ struct RecentLink: Identifiable {
     let targetTitle: String?
     let viaRule: Bool
     let date = Date()
+}
+
+/// "Create a rule for links like this": the pre-filled rule plus what to do
+/// once the editor closes (saved rule, or nil when cancelled).
+struct RuleDraft: Identifiable {
+    let id = UUID()
+    let rule: Rule
+    let context: LinkContext
+    let finish: (Rule?) -> Void
 }

@@ -22,7 +22,7 @@ final class PickerViewModel: ObservableObject {
     /// (target, remember) — remember = also save a rule for this source.
     var onChoose: (BrowserTarget, Bool) -> Void = { _, _ in }
     var onCancel: () -> Void = {}
-    var onCopy: () -> Void = {}
+    var onCreateRule: () -> Void = {}
 
     init(urls: [URL], context: LinkContext, targets: [BrowserTarget]) {
         self.urls = urls

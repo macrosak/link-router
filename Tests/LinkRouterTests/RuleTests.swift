@@ -99,3 +99,16 @@ struct SuggestedRuleTests {
         #expect(r.matches(LinkContext(url: url)))
     }
 }
+
+@Suite("Captured rules")
+struct CapturedRuleTests {
+    @Test func prefillsEverythingAndMatchesTheLink() {
+        let ctx = LinkContext(url: URL(string: "https://www.github.com/acme/x")!, sourceBundleID: "com.jetbrains.intellij",
+                              sourceAppName: "IntelliJ IDEA", windowTitle: "link-router – Rule.swift")
+        let r = Rule.captured(from: ctx, targetID: "t")
+        #expect(r.urlPattern == "github.com")
+        #expect(r.sourceBundleID == "com.jetbrains.intellij")
+        #expect(r.windowTitleContains == "link-router")
+        #expect(r.matches(ctx))
+    }
+}

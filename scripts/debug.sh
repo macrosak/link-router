@@ -8,7 +8,7 @@ set -euo pipefail
 #   scripts/debug.sh open <url>        send a link to it (as a browser would get it)
 #   scripts/debug.sh demo <url>        picker for <url> with a synthetic IntelliJ source
 #   scripts/debug.sh query <text>      set the picker filter
-#   scripts/debug.sh key <name>        up|down|tab|return|opt-return|esc|cmd-1..3
+#   scripts/debug.sh key <name>        up|down|tab|return|opt-return|esc|cmd-r|cmd-1..3
 #   scripts/debug.sh state             print picker state as JSON
 #   scripts/debug.sh settings <tab>    open Settings on general|browsers|rules
 #   scripts/debug.sh shot <file.png>   render the picker / Settings window to a PNG

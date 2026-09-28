@@ -174,3 +174,20 @@ extension Rule {
         return parts.isEmpty ? "No conditions (never matches)" : parts.joined(separator: " · ")
     }
 }
+
+extension Rule {
+    /// The picker's "Create rule…" draft: every condition this link offers
+    /// (host prefix, source app, window project) pre-filled — the user clears
+    /// what they don't want.
+    public static func captured(from ctx: LinkContext, targetID: String) -> Rule {
+        var host = ctx.url.host ?? ""
+        if host.lowercased().hasPrefix("www.") { host = String(host.dropFirst(4)) }
+        return Rule(
+            urlPattern: host,
+            sourceBundleID: ctx.sourceBundleID ?? "",
+            sourceAppName: ctx.sourceAppName ?? "",
+            windowTitleContains: ctx.windowTitle.map(stableTitlePart) ?? "",
+            targetID: targetID
+        )
+    }
+}

@@ -26,6 +26,7 @@ final class PickerController {
         urls: [URL],
         context: LinkContext,
         targets: [BrowserTarget],
+        onCreateRule: @escaping (BrowserTarget?, [URL]) -> Void = { _, _ in },
         onChoose: @escaping (BrowserTarget, Bool, [URL]) -> Void
     ) {
         let start = DispatchTime.now()
@@ -41,6 +42,11 @@ final class PickerController {
             onChoose(target, remember, pending)
         }
         vm.onCancel = { [weak self] in self?.teardown(restoreFocus: true) }
+        vm.onCreateRule = { [weak self, weak vm] in
+            let selected = vm?.selected
+            self?.teardown(restoreFocus: false)
+            onCreateRule(selected, pending)
+        }
         viewModel = vm
 
         let rows = max(1, min(targets.count, Self.maxVisibleRows))
@@ -101,6 +107,10 @@ final class PickerController {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if flags.contains(.command), let digit = Self.digitKeyCodes[event.keyCode] {
             vm.choose(at: digit - 1, remember: flags.contains(.option))
+            return nil
+        }
+        if flags.contains(.command), event.charactersIgnoringModifiers == "r" {
+            vm.onCreateRule()
             return nil
         }
         if flags.contains(.command), event.charactersIgnoringModifiers == "c",

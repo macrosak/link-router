@@ -71,8 +71,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         route(urls, senderPID: nil, forcePicker: NSEvent.modifierFlags.contains(.option), start: .now())
     }
 
-    func route(_ urls: [URL], senderPID: pid_t?, forcePicker: Bool, start: DispatchTime = .now()) {
-        let ctx = SourceContext.capture(url: urls[0], senderPID: senderPID)
+    func route(_ urls: [URL], senderPID: pid_t?, forcePicker: Bool, start: DispatchTime = .now(), context: LinkContext? = nil) {
+        let ctx = context ?? SourceContext.capture(url: urls[0], senderPID: senderPID)
         Log.info("link \(urls[0].absoluteString) from \(ctx.sourceBundleID ?? "?") window=\(ctx.windowTitle ?? "-") (\(Log.ms(since: start)))")
 
         if !forcePicker, let (rule, target) = RuleMatcher.match(store.config.rules, context: ctx, targets: store.config.browsers) {
@@ -88,7 +88,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settings.show(tab: .browsers)
             return
         }
-        picker.show(urls: urls, context: ctx, targets: targets) { [weak self] target, remember, all in
+        picker.show(urls: urls, context: ctx, targets: targets, onCreateRule: { [weak self] selected, all in
+            self?.captureRule(for: all, context: ctx, suggestedTarget: selected ?? targets[0])
+        }) { [weak self] target, remember, all in
             Launcher.open(all, in: target)
             guard let self else { return }
             self.store.recordLink(ctx, openedIn: target, viaRule: false)
@@ -98,6 +100,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             self.refreshBrowsersSoon()
         }
+    }
+
+    /// ⌘R in the picker: edit a pre-filled rule in Settings. Saving stores it
+    /// and opens the link where the rule says; cancelling brings the picker back.
+    private func captureRule(for urls: [URL], context ctx: LinkContext, suggestedTarget: BrowserTarget) {
+        store.ruleDraft = RuleDraft(rule: Rule.captured(from: ctx, targetID: suggestedTarget.id), context: ctx) { [weak self] saved in
+            guard let self else { return }
+            self.store.ruleDraft = nil
+            if let saved, let target = self.store.config.browsers.first(where: { $0.id == saved.targetID }) {
+                Launcher.open(urls, in: target)
+                self.store.recordLink(ctx, openedIn: target, viaRule: true)
+            } else {
+                self.route(urls, senderPID: nil, forcePicker: true, context: ctx)
+            }
+        }
+        settings.show(tab: .rules)
     }
 
     /// New Chrome profiles etc. show up without a manual re-detect; done after
