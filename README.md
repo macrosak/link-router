@@ -94,7 +94,7 @@ Hold **`⌥` while clicking a link** anywhere to skip the rules and get the pick
 - Each Chromium browser also gets an **Incognito** entry (opens the link in a private window).
 - **Detect browsers** re-scans (new Chrome profiles are also picked up automatically after each
   link).
-- **Drag** rows (or use the arrows) to reorder.
+- **Drag** rows to reorder.
 - **Toggle** to enable / disable — disabled entries are hidden from the picker.
 - **Rename** with the pencil or a double-click — e.g. call a profile "tado" instead of "Work".
   The original name stays searchable; clear the field to go back to it.
