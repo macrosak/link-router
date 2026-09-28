@@ -18,10 +18,11 @@ struct PickerView: View {
         VStack(spacing: 0) {
             searchBar
             linkBar
-            if viewModel.filtered.isEmpty {
-                noMatches.frame(height: listHeight)
-            } else {
-                list.frame(height: listHeight)
+            switch viewModel.mode {
+            case .browsers:
+                if viewModel.filtered.isEmpty { noMatches("No browsers match").frame(height: listHeight) } else { list.frame(height: listHeight) }
+            case .actions:
+                if viewModel.filteredActions.isEmpty { noMatches("No actions match").frame(height: listHeight) } else { actionList.frame(height: listHeight) }
             }
             HintBar(items: hints, theme: theme, left: viewModel.sourceDescription.map { "from \($0)" })
         }
@@ -31,13 +32,21 @@ struct PickerView: View {
     }
 
     private var hints: [HintItem] {
-        guard !viewModel.filtered.isEmpty else { return [HintItem(keys: ["esc"], label: "Close")] }
-        return [
-            HintItem(keys: ["↵"], label: "Open"),
-            HintItem(keys: ["⌥", "↵"], label: "Always"),
-            HintItem(keys: ["⌘", "R"], label: "Rule…"),
-            HintItem(keys: ["esc"], label: "Close"),
-        ]
+        switch viewModel.mode {
+        case .browsers:
+            guard !viewModel.filtered.isEmpty else { return [HintItem(keys: ["esc"], label: "Close")] }
+            return [
+                HintItem(keys: ["↵"], label: "Open"),
+                HintItem(keys: ["⇥"], label: "Actions"),
+                HintItem(keys: ["esc"], label: "Close"),
+            ]
+        case .actions:
+            return [
+                HintItem(keys: ["↵"], label: "Run"),
+                HintItem(keys: ["⇥"], label: "Browsers"),
+                HintItem(keys: ["esc"], label: "Back"),
+            ]
+        }
     }
 
     private var searchBar: some View {
@@ -45,7 +54,7 @@ struct PickerView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(theme.textDim)
-            TextField("Open in…", text: $viewModel.query)
+            TextField(viewModel.mode == .browsers ? "Open in…" : "Actions…", text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .font(.system(size: 19))
                 .foregroundStyle(theme.text)
@@ -101,7 +110,7 @@ struct PickerView: View {
                         )
                         .id(t.id)
                         .contentShape(Rectangle())
-                        .onTapGesture { viewModel.choose(at: idx, remember: NSEvent.modifierFlags.contains(.option)) }
+                        .onTapGesture { viewModel.choose(at: idx) }
                         .onHover { if $0 { viewModel.selectedIndex = idx } }
                     }
                 }
@@ -113,13 +122,32 @@ struct PickerView: View {
         }
     }
 
-    private var noMatches: some View {
+    private var actionList: some View {
+        ScrollView {
+            VStack(spacing: 1) {
+                ForEach(Array(viewModel.filteredActions.enumerated()), id: \.element.id) { idx, item in
+                    ActionRow(
+                        item: item,
+                        active: idx == viewModel.selectedIndex,
+                        quickKey: viewModel.commandHeld && idx < 9 ? idx + 1 : nil,
+                        theme: theme
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture { viewModel.runAction(at: idx) }
+                    .onHover { if $0 { viewModel.selectedIndex = idx } }
+                }
+            }
+            .padding(.vertical, 6)
+        }
+    }
+
+    private func noMatches(_ label: String) -> some View {
         VStack(spacing: 8) {
             Spacer()
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 28, weight: .light))
                 .foregroundStyle(theme.textFaint)
-            Text("No browsers match “\(viewModel.query)”")
+            Text("\(label) “\(viewModel.query)”")
                 .font(.system(size: 13.5))
                 .foregroundStyle(theme.textDim)
             Spacer()
@@ -146,6 +174,48 @@ struct TargetRow: View {
                         .font(.system(size: 11.5))
                         .foregroundStyle(active ? .white.opacity(0.7) : theme.textFaint)
                 }
+            }
+            .lineLimit(1)
+            Spacer(minLength: 8)
+            if let quickKey {
+                Keycap(label: "⌘\(quickKey)", theme: theme)
+            } else if active {
+                Text("↵")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: PickerView.rowHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(active ? theme.sel : .clear)
+                .shadow(color: active ? Color(rgba: 10, 90, 200, 0.35) : .clear, radius: 3, y: 1)
+        )
+        .padding(.horizontal, 8)
+    }
+}
+
+/// A row of the ⇥ action menu: symbol, title, one-line explanation.
+struct ActionRow: View {
+    let item: PickerActionItem
+    let active: Bool
+    var quickKey: Int?
+    let theme: RXTheme
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: item.action.symbol)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(active ? .white : theme.accent)
+                .frame(width: 26, height: 26)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(active ? .white : theme.text)
+                Text(item.subtitle)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(active ? .white.opacity(0.7) : theme.textFaint)
             }
             .lineLimit(1)
             Spacer(minLength: 8)

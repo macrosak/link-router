@@ -22,6 +22,8 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
     public var enabled: Bool
     /// User-chosen label shown instead of the detected name; nil = detected.
     public var customName: String?
+    /// A Chromium incognito window (`--incognito`) rather than a profile.
+    public var incognito: Bool = false
 
     public init(
         bundleID: String,
@@ -30,9 +32,11 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
         profileDirectory: String? = nil,
         profileName: String? = nil,
         profileEmail: String? = nil,
-        enabled: Bool = true
+        enabled: Bool = true,
+        incognito: Bool = false
     ) {
-        self.id = Self.makeID(bundleID: bundleID, profileDirectory: profileDirectory)
+        self.id = incognito ? Self.incognitoID(bundleID: bundleID) : Self.makeID(bundleID: bundleID, profileDirectory: profileDirectory)
+        self.incognito = incognito
         self.bundleID = bundleID
         self.appPath = appPath
         self.appName = appName
@@ -45,6 +49,13 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
     public static func makeID(bundleID: String, profileDirectory: String?) -> String {
         guard let profileDirectory else { return bundleID }
         return "\(bundleID)#\(profileDirectory)"
+    }
+
+    public static func incognitoID(bundleID: String) -> String { "\(bundleID)#incognito" }
+
+    /// Plain Chromium browser → its Incognito entry.
+    public static func incognito(bundleID: String, appPath: String, appName: String) -> BrowserTarget {
+        BrowserTarget(bundleID: bundleID, appPath: appPath, appName: appName, profileName: "Incognito", incognito: true)
     }
 
     /// Primary label: the custom name, else the profile name for a profile,
@@ -63,6 +74,7 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
     /// Secondary label: "Google Chrome · me@example.com" for a profile, empty
     /// for a plain browser.
     public var subtitle: String {
+        if incognito { return "\(appName) · private window" }
         guard profileDirectory != nil else { return "" }
         if let profileEmail, !profileEmail.isEmpty { return "\(appName) · \(profileEmail)" }
         return appName
@@ -71,5 +83,24 @@ public struct BrowserTarget: Codable, Identifiable, Hashable, Sendable {
     /// Everything the picker's type-to-filter searches.
     public var searchFields: [String] {
         [title, detectedName, appName, profileEmail ?? ""].filter { !$0.isEmpty }
+    }
+
+    // Tolerant decoding: configs written before a field existed still load.
+    private enum CodingKeys: String, CodingKey {
+        case id, bundleID, appPath, appName, profileDirectory, profileName, profileEmail, enabled, customName, incognito
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        bundleID = try c.decode(String.self, forKey: .bundleID)
+        appPath = try c.decode(String.self, forKey: .appPath)
+        appName = try c.decode(String.self, forKey: .appName)
+        profileDirectory = try c.decodeIfPresent(String.self, forKey: .profileDirectory)
+        profileName = try c.decodeIfPresent(String.self, forKey: .profileName)
+        profileEmail = try c.decodeIfPresent(String.self, forKey: .profileEmail)
+        enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+        customName = try c.decodeIfPresent(String.self, forKey: .customName)
+        incognito = try c.decodeIfPresent(Bool.self, forKey: .incognito) ?? false
     }
 }

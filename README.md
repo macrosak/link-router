@@ -19,8 +19,8 @@
 Link Router sits in place of your default browser. When you click a link anywhere, it either
 **opens it straight away** in the browser a rule picks, or shows a small **picker** — type a
 few letters, hit `↵`, done. Every installed browser is listed, and Chromium-family browsers
-(Chrome, Brave, Edge, Vivaldi, Chromium) are listed **per profile**, so "work links in the work
-profile" is one keystroke or one rule.
+(Chrome, Brave, Edge, Vivaldi, Chromium) are listed **per profile** — plus an **Incognito**
+entry — so "work links in the work profile" is one keystroke or one rule.
 
 - **Rules** on the URL (prefix with `*` wildcards, contains, or regex), the **source app**, and the
   **source window title** — e.g. each IntelliJ project window opens links in a different Chrome
@@ -64,14 +64,26 @@ or **Settings → General → Make default**.
 | Key | Does |
 | --- | --- |
 | *type* | Filter browsers / profiles (fuzzy: name, custom name, account email, app) |
-| `↑` `↓` (or `⇥` / `⇧⇥`) | Move the selection |
+| `↑` `↓` | Move the selection |
 | `↵` | Open in the selected browser (the first match while filtering) |
 | `⌘1`–`⌘9` | Open in the Nth browser — hold `⌘` to see the numbers |
-| `⌥↵` | Open **and always use it** for this app + window (saves a rule) |
-| `⌘R` | **Create a rule for links like this** — opens the rule editor pre-filled from the link |
-| `⌘C` | Copy the link and close |
-| `esc` | Clear the filter; press again to close |
-| click | Open in the clicked browser (`⌥`-click = always) |
+| `⇥` | Switch to the **action menu** (and back) |
+| `esc` | Clear the filter; then leave the action menu; then close |
+| click | Open in the clicked browser |
+
+**Actions (`⇥`)** work on the link and the browser that was highlighted when you pressed `⇥`.
+They're filterable like the browser list:
+
+- **Record new rule…** — the rule editor, pre-filled from this link (see [Rules](#rules)).
+- **Always open in *&lt;browser&gt;*** — opens the link and saves a rule for this app + window
+  project.
+- **Copy link to clipboard** — without opening it.
+- **Open Settings…**
+
+<p align="center">
+  <img src="docs/actions.png" alt="Link Router action menu" width="600"><br>
+  <em>⇥ — actions for the link.</em>
+</p>
 
 Hold **`⌥` while clicking a link** anywhere to skip the rules and get the picker.
 
@@ -79,6 +91,7 @@ Hold **`⌥` while clicking a link** anywhere to skip the rules and get the pick
 
 **Settings → Browsers** lists every detected browser and profile in picker order:
 
+- Each Chromium browser also gets an **Incognito** entry (opens the link in a private window).
 - **Detect browsers** re-scans (new Chrome profiles are also picked up automatically after each
   link).
 - **Drag** rows (or use the arrows) to reorder.
@@ -104,11 +117,12 @@ condition you set on a rule must match:
 
 Three ways to create one without typing patterns by hand:
 
-- **`⌘R` in the picker — "create a rule for links like this".** The editor opens pre-filled with
-  the link's host, the source app and the project part of its window title, plus a live
-  *matches this link* check. Clear what you don't need, pick the browser, **Save** — the rule is
-  stored and the link opens with it. Cancel brings the picker back.
-- **`⌥↵` in the picker** — open and silently save a rule for the current app + window project.
+- **`⇥` → Record new rule… in the picker — "a rule for links like this".** The editor opens
+  pre-filled with the link's host, the source app and the project part of its window title,
+  plus a live *matches this link* check. Clear what you don't need, pick the browser, **Save** —
+  the rule is stored and the link opens with it. Cancel brings the picker back.
+- **`⇥` → Always open in *&lt;browser&gt;*** — open and save a rule for the current app + window
+  project in one go.
 - **Settings → Rules → Recent links → Create rule…** — same pre-filled editor for any link
   routed since launch.
 

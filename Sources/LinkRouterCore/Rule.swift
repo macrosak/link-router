@@ -138,7 +138,7 @@ extension String {
 }
 
 extension Rule {
-    /// The rule ⌥↵ ("always use this") saves: scoped to the source app and,
+    /// The rule the picker's "Always open in …" action saves: scoped to the source app and,
     /// when known, the stable part of its window title (the project name in
     /// IDE titles like "link-router – Rule.swift"). Without a source app it
     /// falls back to the link's host.

@@ -90,6 +90,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         picker.show(urls: urls, context: ctx, targets: targets, onCreateRule: { [weak self] selected, all in
             self?.captureRule(for: all, context: ctx, suggestedTarget: selected ?? targets[0])
+        }, onOpenSettings: { [weak self] in
+            self?.settings.show(tab: .general)
         }) { [weak self] target, remember, all in
             Launcher.open(all, in: target)
             guard let self else { return }
@@ -102,7 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// ⌘R in the picker: edit a pre-filled rule in Settings. Saving stores it
+    /// "Record new rule…" in the picker: edit a pre-filled rule in Settings. Saving stores it
     /// and opens the link where the rule says; cancelling brings the picker back.
     private func captureRule(for urls: [URL], context ctx: LinkContext, suggestedTarget: BrowserTarget) {
         store.ruleDraft = RuleDraft(rule: Rule.captured(from: ctx, targetID: suggestedTarget.id), context: ctx) { [weak self] saved in

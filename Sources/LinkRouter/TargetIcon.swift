@@ -38,7 +38,7 @@ struct TargetIconView: View {
     var size: CGFloat = 28
 
     var body: some View {
-        if target.profileDirectory == nil {
+        if target.profileDirectory == nil && !target.incognito {
             appIcon
         } else {
             avatar
@@ -60,7 +60,15 @@ struct TargetIconView: View {
 
     @ViewBuilder
     private var avatar: some View {
-        if let pic = IconCache.shared.profilePicture(target) {
+        if target.incognito {
+            Circle()
+                .fill(Color(hex: 0x3C4043))
+                .overlay(
+                    Image(systemName: "eyeglasses")
+                        .font(.system(size: size * 0.42, weight: .semibold))
+                        .foregroundStyle(.white)
+                )
+        } else if let pic = IconCache.shared.profilePicture(target) {
             Image(nsImage: pic)
                 .resizable()
                 .aspectRatio(contentMode: .fill)

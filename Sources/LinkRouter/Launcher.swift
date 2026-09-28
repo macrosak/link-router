@@ -3,17 +3,27 @@ import LinkRouterCore
 
 /// Opens URLs in a target browser as fast as possible.
 ///
-/// - Chromium profile, browser running: write the command line straight into
+/// - Chromium profile or Incognito, browser running: write the command line straight into
 ///   the browser's `SingletonSocket` (sub-millisecond), then activate it.
-/// - Chromium profile, browser not running: launch it with
-///   `--profile-directory=…` + the URLs.
+/// - Chromium profile or Incognito, browser not running: launch it with
+///   `--profile-directory=…` / `--incognito` + the URLs.
 /// - Anything else: `NSWorkspace.open(_:withApplicationAt:)`.
 enum Launcher {
     static func open(_ urls: [URL], in target: BrowserTarget) {
         let start = DispatchTime.now()
         let appURL = URL(fileURLWithPath: target.appPath)
 
-        guard let profile = target.profileDirectory,
+        // A profile directory that no longer exists (profile deleted since
+        // detection) would make Chromium silently create a new, empty profile —
+        // open in the browser's last-used profile instead.
+        var profileDirectory = target.profileDirectory
+        if let p = profileDirectory, let dir = ChromiumProfiles.userDataDir(for: target.bundleID),
+           !FileManager.default.fileExists(atPath: dir.appendingPathComponent(p).path) {
+            Log.error("profile \(p) of \(target.bundleID) is gone — opening without a profile")
+            profileDirectory = nil
+        }
+
+        guard profileDirectory != nil || target.incognito,
               let dataDir = ChromiumProfiles.userDataDir(for: target.bundleID)
         else {
             let cfg = NSWorkspace.OpenConfiguration()
@@ -25,7 +35,10 @@ enum Launcher {
             return
         }
 
-        let args = ["--profile-directory=\(profile)"] + urls.map(\.absoluteString)
+        var args: [String] = []
+        if let profileDirectory { args.append("--profile-directory=\(profileDirectory)") }
+        if target.incognito { args.append("--incognito") }
+        args += urls.map(\.absoluteString)
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: target.bundleID).first
 
         if running != nil, let socket = ChromiumSingleton.socketPath(userDataDir: dataDir) {

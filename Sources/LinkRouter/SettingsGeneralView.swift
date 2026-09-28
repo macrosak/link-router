@@ -82,13 +82,11 @@ struct SettingsGeneralView: View {
                 SectionLabel(text: "Picker keys", theme: theme)
                 SettingsCard(theme: theme) {
                     keyRow(["type"], "Filter browsers")
-                    keyRow(["↑", "↓"], "Move selection (also ⇥ / ⇧⇥)")
+                    keyRow(["↑", "↓"], "Move selection")
                     keyRow(["↵"], "Open in the selected browser")
                     keyRow(["⌘", "1–9"], "Open in the Nth browser")
-                    keyRow(["⌥", "↵"], "Open and always use it for this app / window")
-                    keyRow(["⌘", "R"], "Create a rule for links like this (pre-filled editor)")
-                    keyRow(["⌘", "C"], "Copy the link and close")
-                    keyRow(["esc"], "Clear filter, then close")
+                    keyRow(["⇥"], "Actions: record a rule, always use this browser, copy link, settings")
+                    keyRow(["esc"], "Clear filter, leave actions, then close")
                     keyRow(["⌥", "click link"], "Hold ⌥ while clicking a link to skip rules and show the picker", last: true)
                 }
             }
