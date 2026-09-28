@@ -27,7 +27,7 @@ struct SettingsRulesView: View {
                         ruleRow(rule, idx: idx, last: idx == store.config.rules.count - 1)
                     }
                 }
-                Text("All conditions set on a rule must match. URL “starts with” ignores http(s):// and www. when you leave the scheme out, and * is a wildcard. Hold ⌥ while clicking a link to bypass rules.")
+                Text(verbatim: "All conditions set on a rule must match. URL “starts with” ignores http(s):// and www. when you leave the scheme out, and * is a wildcard. Hold ⌥ while clicking a link to bypass rules.")
                     .font(.system(size: 11.5))
                     .foregroundStyle(theme.textDim)
                     .frame(maxWidth: .infinity, alignment: .leading)
