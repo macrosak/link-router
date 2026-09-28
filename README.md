@@ -123,10 +123,16 @@ Accessibility**: **Settings → General → Accessibility → Grant…** → tog
 under **Privacy & Security → Accessibility** → **quit and relaunch** Link Router (macOS reads
 the grant at process start).
 
+Releases are signed with a stable (self-signed) *Link Router Release* identity, so the grant
+survives updates — you grant it once. Builds you make yourself are signed differently (see
+[Building from source](#building-from-source)), so switching between a self-built and a
+released app needs a re-grant.
+
 ## Troubleshooting
 
 - **"Accessibility" shows as not granted even though it's on** — macOS is holding a stale grant
-  (e.g. from an earlier build signed differently). Reset it and grant again:
+  (e.g. after switching between a self-built and a released app, which are signed
+  differently). Reset it and grant again:
   ```bash
   tccutil reset Accessibility io.github.macrosak.linkrouter
   killall LinkRouter; open "/Applications/Link Router.app"
