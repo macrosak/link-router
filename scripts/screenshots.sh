@@ -23,7 +23,7 @@ sleep 2
 ./scripts/debug.sh shot "$PWD/docs/browsers.png"
 ./scripts/debug.sh settings rules; sleep 1
 ./scripts/debug.sh shot "$PWD/docs/rules.png"
-sips -c 850 1440 --cropOffset 0 0 docs/browsers.png >/dev/null
-sips -c 800 1440 --cropOffset 0 0 docs/rules.png >/dev/null
+swift scripts/crop-top.swift docs/browsers.png 850
+swift scripts/crop-top.swift docs/rules.png 800
 ./scripts/debug.sh quit
 echo "✓ docs/*.png updated"
